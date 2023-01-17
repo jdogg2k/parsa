@@ -1,0 +1,26 @@
+type Note @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  description: String
+}
+
+type Segment @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  userID: String!
+  name: String!
+  description: String
+  Customerinfos: [Customerinfo] @hasMany(indexName: "bySegment", fields: ["id"])
+}
+
+type Customerinfo @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  customer_name: String
+  annual_product_sales: Float
+  products_purchased: String
+  cost_of_products: Float
+  services_purchased: Boolean
+  annual_service_sales: Float
+  cost_of_services: Float
+  segmentID: ID! @index(name: "bySegment")
+}
+ 
