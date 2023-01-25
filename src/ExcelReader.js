@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import * as XLSX from 'xlsx';
 import { make_cols } from './MakeColumns';
 import { SheetJSFT } from './types';
+// eslint-disable-next-line
+import CanvasDatagrid from 'canvas-datagrid';
  
 class ExcelReader extends Component {
   constructor(props) {
@@ -36,7 +38,8 @@ class ExcelReader extends Component {
       const data = XLSX.utils.sheet_to_json(ws);
       /* Update state */
       this.setState({ data: data, cols: make_cols(ws['!ref']) }, () => {
-        console.log(JSON.stringify(this.state.data, null, 2));
+        //console.log(JSON.stringify(this.state.data, null, 2));
+
       });
  
     };
@@ -57,7 +60,10 @@ class ExcelReader extends Component {
         <input type='submit' 
           value="Load Data"
           onClick={this.handleFile} />
-          </div>
+      <br /><br /><br /><br />
+      <canvas-datagrid data={JSON.stringify(this.state.data, null, 2)} /> 
+      
+      </div>
       
     )
   }
