@@ -40,6 +40,30 @@ const App = ({ signOut }) => {
 
   const [notes, setNotes] = useState([]);
 
+  var filterParams = {
+    comparator: (filterLocalDateAtMidnight, cellValue) => {
+      var dateAsString = cellValue;
+      if (dateAsString == null) return -1;
+      var dateParts = dateAsString.split('/');
+      var cellDate = new Date(
+        Number(dateParts[2]),
+        Number(dateParts[1]) - 1,
+        Number(dateParts[0])
+      );
+      if (filterLocalDateAtMidnight.getTime() === cellDate.getTime()) {
+        return 0;
+      }
+      if (cellDate < filterLocalDateAtMidnight) {
+        return -1;
+      }
+      if (cellDate > filterLocalDateAtMidnight) {
+        return 1;
+      }
+      return 0;
+    },
+    browserDatePicker: true
+  }
+
   function currencyNegative(tVal) {
     return '$(' + parseFloat(tVal).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,").replace("-", "") + ")";
   }
@@ -78,12 +102,16 @@ const App = ({ signOut }) => {
     };
   }, []);
 
+  const onFirstDataRendered = useCallback((params) => {
+    gridRef.current.api.sizeColumnsToFit();
+  }, []);
+
   const handleData = (xData) =>{
 
     setColumnDefs([
       {field: 'customer_name', headerName: 'Customer Name', filter: true, rowGroup: true, sort: 'asc', floatingFilter: true, hide: true},
       {field: 'product_name', headerName: 'Product Name', filter: true, floatingFilter: true},
-      {field: 'transaction_date', headerName: 'Transaction Date', filter: 'agDateColumnFilter', floatingFilter: true},
+      {field: 'transaction_date', headerName: 'Transaction Date', filter: 'agDateColumnFilter', filterParams: filterParams, floatingFilter: true},
       {field: 'distribution_type', headerName: 'Distribution Type', filter: true, floatingFilter: true},
       {field: 'cost_of_goods_sold', headerName: 'Cost of Goods Sold', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true},
       {field: 'unit_revenue', headerName: 'Unit Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true},
@@ -129,11 +157,6 @@ const App = ({ signOut }) => {
     fetchNotes();
   }, []);
 
-  // Example using Grid's API
- const buttonListener = useCallback( e => {
-  gridRef.current.api.deselectAll();
-}, []);
-
   async function fetchNotes() {
     const apiData = await API.graphql({ query: listNotes });
     const notesFromAPI = apiData.data.listNotes.items;
@@ -175,7 +198,7 @@ const App = ({ signOut }) => {
             ref={gridRef} // Ref for accessing Grid's API
 
             rowData={rowData} // Row Data for Rows
-
+            onFirstDataRendered={onFirstDataRendered}
             columnDefs={columnDefs} // Column Defs for Columns
             defaultColDef={defaultColDef} // Default Column Properties
             suppressAggFuncInHeader={true}
