@@ -2,8 +2,11 @@ import React, { Component } from 'react';
 import * as XLSX from 'xlsx';
 import { make_cols } from './MakeColumns';
 import { SheetJSFT } from './types';
+import { groupBy as rowGrouper } from 'lodash';
 // eslint-disable-next-line
 import CanvasDatagrid from 'canvas-datagrid';
+import 'react-data-grid/lib/styles.css';
+import DataGrid, { SelectColumn, Row } from 'react-data-grid';
  
 class ExcelReader extends Component {
   constructor(props) {
@@ -11,12 +14,17 @@ class ExcelReader extends Component {
     this.state = {
       file: {},
       data: [],
-      cols: []
+      cols: [],
+      columns: [],
+      rows: [],
+      groupBy: "customer name",
+
     }
     this.handleFile = this.handleFile.bind(this);
     this.handleChange = this.handleChange.bind(this);
+
   }
- 
+
   handleChange(e) {
     const files = e.target.files;
     if (files && files[0]) this.setState({ file: files[0] });
@@ -36,11 +44,33 @@ class ExcelReader extends Component {
       const ws = wb.Sheets[wsname];
       /* Convert array of arrays */
       const data = XLSX.utils.sheet_to_json(ws);
-      /* Update state */
-      this.setState({ data: data, cols: make_cols(ws['!ref']) }, () => {
-        //console.log(JSON.stringify(this.state.data, null, 2));
 
+      this.props.excelData(data);
+      
+      /*const colData = [SelectColumn];
+      const rowData = [];
+
+      Object.keys(data[0]).map(function(key) {
+          if (key.indexOf('EMPTY') == -1){
+            colData.push({ key: key.toLowerCase(), name: key });
+          }
       });
+
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const rowObj = {};
+        Object.keys(item).map(function(key) {
+          if (key.indexOf('EMPTY') == -1){
+            rowObj[key.toLowerCase()] = item[key];
+          }
+        });
+        rowData.push(rowObj);
+      }
+
+      /* Update state */
+      /*this.setState({ data: data, cols: make_cols(ws['!ref']) }, () => {
+        console.log(JSON.stringify(this.state.data, null, 2));
+      });*/
  
     };
  
@@ -56,13 +86,12 @@ class ExcelReader extends Component {
       <div>
         <label htmlFor="file">Upload an excel file to ingest your dataset</label>
         <br />
+        <a href="./Sample-Sales.xlsx">Download Sample XLSX File</a>
+        <br />
         <input type="file" className="form-control" id="file" accept={SheetJSFT} onChange={this.handleChange} />&nbsp;
         <input type='submit' 
           value="Load Data"
           onClick={this.handleFile} />
-      <br /><br /><br /><br />
-      <canvas-datagrid data={JSON.stringify(this.state.data, null, 2)} /> 
-      
       </div>
       
     )
