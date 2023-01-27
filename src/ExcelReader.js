@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
 import * as XLSX from 'xlsx';
-import { make_cols } from './MakeColumns';
 import { SheetJSFT } from './types';
-import { groupBy as rowGrouper } from 'lodash';
 // eslint-disable-next-line
-import CanvasDatagrid from 'canvas-datagrid';
 import 'react-data-grid/lib/styles.css';
-import DataGrid, { SelectColumn, Row } from 'react-data-grid';
+import { Button, Container, Row, Col, InputGroup } from 'react-bootstrap';
  
 class ExcelReader extends Component {
   constructor(props) {
@@ -84,14 +81,19 @@ class ExcelReader extends Component {
   render() {
     return (
       <div>
-        <label htmlFor="file">Upload an excel file to ingest your dataset</label>
-        <br />
-        <a href="./Sample-Sales.xlsx">Download Sample XLSX File</a>
-        <br />
-        <input type="file" className="form-control" id="file" accept={SheetJSFT} onChange={this.handleChange} />&nbsp;
-        <input type='submit' 
-          value="Load Data"
-          onClick={this.handleFile} />
+         <Container>
+          <Row>
+            <Col>
+            <InputGroup className="mb-3">
+            <input type="file" className="form-control" id="file" accept={SheetJSFT} onChange={this.handleChange} title="Upload an excel file to ingest your dataset" />
+            <Button variant="info" onClick={this.handleFile}>Load Data</Button>
+            </InputGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col><a href="./Sample-Sales.xlsx">Download Sample XLSX File</a></Col>
+          </Row>
+        </Container>        
       </div>
       
     )

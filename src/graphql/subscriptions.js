@@ -1,34 +1,91 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const onCreateNote = /* GraphQL */ `
-  subscription OnCreateNote($filter: ModelSubscriptionNoteFilterInput) {
-    onCreateNote(filter: $filter) {
+export const onCreateCustomer = /* GraphQL */ `
+  subscription OnCreateCustomer($filter: ModelSubscriptionCustomerFilterInput) {
+    onCreateCustomer(filter: $filter) {
       id
       name
-      description
+      segmentID
+      CustomerData {
+        items {
+          id
+          row_num
+          product_name
+          cost_of_goods_sold
+          unit_revenue
+          service_revenue
+          cost_of_services
+          quantity
+          customerID
+          services_purchased
+          service_type
+          transaction_date
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
   }
 `;
-export const onUpdateNote = /* GraphQL */ `
-  subscription OnUpdateNote($filter: ModelSubscriptionNoteFilterInput) {
-    onUpdateNote(filter: $filter) {
+export const onUpdateCustomer = /* GraphQL */ `
+  subscription OnUpdateCustomer($filter: ModelSubscriptionCustomerFilterInput) {
+    onUpdateCustomer(filter: $filter) {
       id
       name
-      description
+      segmentID
+      CustomerData {
+        items {
+          id
+          row_num
+          product_name
+          cost_of_goods_sold
+          unit_revenue
+          service_revenue
+          cost_of_services
+          quantity
+          customerID
+          services_purchased
+          service_type
+          transaction_date
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
   }
 `;
-export const onDeleteNote = /* GraphQL */ `
-  subscription OnDeleteNote($filter: ModelSubscriptionNoteFilterInput) {
-    onDeleteNote(filter: $filter) {
+export const onDeleteCustomer = /* GraphQL */ `
+  subscription OnDeleteCustomer($filter: ModelSubscriptionCustomerFilterInput) {
+    onDeleteCustomer(filter: $filter) {
       id
       name
-      description
+      segmentID
+      CustomerData {
+        items {
+          id
+          row_num
+          product_name
+          cost_of_goods_sold
+          unit_revenue
+          service_revenue
+          cost_of_services
+          quantity
+          customerID
+          services_purchased
+          service_type
+          transaction_date
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -41,6 +98,16 @@ export const onCreateSegment = /* GraphQL */ `
       userID
       name
       description
+      Customers {
+        items {
+          id
+          name
+          segmentID
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -53,6 +120,16 @@ export const onUpdateSegment = /* GraphQL */ `
       userID
       name
       description
+      Customers {
+        items {
+          id
+          name
+          segmentID
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -65,63 +142,82 @@ export const onDeleteSegment = /* GraphQL */ `
       userID
       name
       description
+      Customers {
+        items {
+          id
+          name
+          segmentID
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
   }
 `;
-export const onCreateCustomerinfo = /* GraphQL */ `
-  subscription OnCreateCustomerinfo(
-    $filter: ModelSubscriptionCustomerinfoFilterInput
+export const onCreateCustomerData = /* GraphQL */ `
+  subscription OnCreateCustomerData(
+    $filter: ModelSubscriptionCustomerDataFilterInput
   ) {
-    onCreateCustomerinfo(filter: $filter) {
+    onCreateCustomerData(filter: $filter) {
       id
-      segment
-      customer_name
-      annual_product_sales
-      products_purchased
-      cost_of_products
-      services_purchased
-      annual_service_sales
+      row_num
+      product_name
+      cost_of_goods_sold
+      unit_revenue
+      service_revenue
       cost_of_services
+      quantity
+      customerID
+      services_purchased
+      service_type
+      transaction_date
       createdAt
       updatedAt
     }
   }
 `;
-export const onUpdateCustomerinfo = /* GraphQL */ `
-  subscription OnUpdateCustomerinfo(
-    $filter: ModelSubscriptionCustomerinfoFilterInput
+export const onUpdateCustomerData = /* GraphQL */ `
+  subscription OnUpdateCustomerData(
+    $filter: ModelSubscriptionCustomerDataFilterInput
   ) {
-    onUpdateCustomerinfo(filter: $filter) {
+    onUpdateCustomerData(filter: $filter) {
       id
-      segment
-      customer_name
-      annual_product_sales
-      products_purchased
-      cost_of_products
-      services_purchased
-      annual_service_sales
+      row_num
+      product_name
+      cost_of_goods_sold
+      unit_revenue
+      service_revenue
       cost_of_services
+      quantity
+      customerID
+      services_purchased
+      service_type
+      transaction_date
       createdAt
       updatedAt
     }
   }
 `;
-export const onDeleteCustomerinfo = /* GraphQL */ `
-  subscription OnDeleteCustomerinfo(
-    $filter: ModelSubscriptionCustomerinfoFilterInput
+export const onDeleteCustomerData = /* GraphQL */ `
+  subscription OnDeleteCustomerData(
+    $filter: ModelSubscriptionCustomerDataFilterInput
   ) {
-    onDeleteCustomerinfo(filter: $filter) {
+    onDeleteCustomerData(filter: $filter) {
       id
-      segment
-      customer_name
-      annual_product_sales
-      products_purchased
-      cost_of_products
-      services_purchased
-      annual_service_sales
+      row_num
+      product_name
+      cost_of_goods_sold
+      unit_revenue
+      service_revenue
       cost_of_services
+      quantity
+      customerID
+      services_purchased
+      service_type
+      transaction_date
       createdAt
       updatedAt
     }

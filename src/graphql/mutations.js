@@ -1,43 +1,100 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const createNote = /* GraphQL */ `
-  mutation CreateNote(
-    $input: CreateNoteInput!
-    $condition: ModelNoteConditionInput
+export const createCustomer = /* GraphQL */ `
+  mutation CreateCustomer(
+    $input: CreateCustomerInput!
+    $condition: ModelCustomerConditionInput
   ) {
-    createNote(input: $input, condition: $condition) {
+    createCustomer(input: $input, condition: $condition) {
       id
       name
-      description
+      segmentID
+      CustomerData {
+        items {
+          id
+          row_num
+          product_name
+          cost_of_goods_sold
+          unit_revenue
+          service_revenue
+          cost_of_services
+          quantity
+          customerID
+          services_purchased
+          service_type
+          transaction_date
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
   }
 `;
-export const updateNote = /* GraphQL */ `
-  mutation UpdateNote(
-    $input: UpdateNoteInput!
-    $condition: ModelNoteConditionInput
+export const updateCustomer = /* GraphQL */ `
+  mutation UpdateCustomer(
+    $input: UpdateCustomerInput!
+    $condition: ModelCustomerConditionInput
   ) {
-    updateNote(input: $input, condition: $condition) {
+    updateCustomer(input: $input, condition: $condition) {
       id
       name
-      description
+      segmentID
+      CustomerData {
+        items {
+          id
+          row_num
+          product_name
+          cost_of_goods_sold
+          unit_revenue
+          service_revenue
+          cost_of_services
+          quantity
+          customerID
+          services_purchased
+          service_type
+          transaction_date
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
   }
 `;
-export const deleteNote = /* GraphQL */ `
-  mutation DeleteNote(
-    $input: DeleteNoteInput!
-    $condition: ModelNoteConditionInput
+export const deleteCustomer = /* GraphQL */ `
+  mutation DeleteCustomer(
+    $input: DeleteCustomerInput!
+    $condition: ModelCustomerConditionInput
   ) {
-    deleteNote(input: $input, condition: $condition) {
+    deleteCustomer(input: $input, condition: $condition) {
       id
       name
-      description
+      segmentID
+      CustomerData {
+        items {
+          id
+          row_num
+          product_name
+          cost_of_goods_sold
+          unit_revenue
+          service_revenue
+          cost_of_services
+          quantity
+          customerID
+          services_purchased
+          service_type
+          transaction_date
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -53,6 +110,16 @@ export const createSegment = /* GraphQL */ `
       userID
       name
       description
+      Customers {
+        items {
+          id
+          name
+          segmentID
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -68,6 +135,16 @@ export const updateSegment = /* GraphQL */ `
       userID
       name
       description
+      Customers {
+        items {
+          id
+          name
+          segmentID
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -83,66 +160,85 @@ export const deleteSegment = /* GraphQL */ `
       userID
       name
       description
+      Customers {
+        items {
+          id
+          name
+          segmentID
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
   }
 `;
-export const createCustomerinfo = /* GraphQL */ `
-  mutation CreateCustomerinfo(
-    $input: CreateCustomerinfoInput!
-    $condition: ModelCustomerinfoConditionInput
+export const createCustomerData = /* GraphQL */ `
+  mutation CreateCustomerData(
+    $input: CreateCustomerDataInput!
+    $condition: ModelCustomerDataConditionInput
   ) {
-    createCustomerinfo(input: $input, condition: $condition) {
+    createCustomerData(input: $input, condition: $condition) {
       id
-      segment
-      customer_name
-      annual_product_sales
-      products_purchased
-      cost_of_products
-      services_purchased
-      annual_service_sales
+      row_num
+      product_name
+      cost_of_goods_sold
+      unit_revenue
+      service_revenue
       cost_of_services
+      quantity
+      customerID
+      services_purchased
+      service_type
+      transaction_date
       createdAt
       updatedAt
     }
   }
 `;
-export const updateCustomerinfo = /* GraphQL */ `
-  mutation UpdateCustomerinfo(
-    $input: UpdateCustomerinfoInput!
-    $condition: ModelCustomerinfoConditionInput
+export const updateCustomerData = /* GraphQL */ `
+  mutation UpdateCustomerData(
+    $input: UpdateCustomerDataInput!
+    $condition: ModelCustomerDataConditionInput
   ) {
-    updateCustomerinfo(input: $input, condition: $condition) {
+    updateCustomerData(input: $input, condition: $condition) {
       id
-      segment
-      customer_name
-      annual_product_sales
-      products_purchased
-      cost_of_products
-      services_purchased
-      annual_service_sales
+      row_num
+      product_name
+      cost_of_goods_sold
+      unit_revenue
+      service_revenue
       cost_of_services
+      quantity
+      customerID
+      services_purchased
+      service_type
+      transaction_date
       createdAt
       updatedAt
     }
   }
 `;
-export const deleteCustomerinfo = /* GraphQL */ `
-  mutation DeleteCustomerinfo(
-    $input: DeleteCustomerinfoInput!
-    $condition: ModelCustomerinfoConditionInput
+export const deleteCustomerData = /* GraphQL */ `
+  mutation DeleteCustomerData(
+    $input: DeleteCustomerDataInput!
+    $condition: ModelCustomerDataConditionInput
   ) {
-    deleteCustomerinfo(input: $input, condition: $condition) {
+    deleteCustomerData(input: $input, condition: $condition) {
       id
-      segment
-      customer_name
-      annual_product_sales
-      products_purchased
-      cost_of_products
-      services_purchased
-      annual_service_sales
+      row_num
+      product_name
+      cost_of_goods_sold
+      unit_revenue
+      service_revenue
       cost_of_services
+      quantity
+      customerID
+      services_purchased
+      service_type
+      transaction_date
       createdAt
       updatedAt
     }
