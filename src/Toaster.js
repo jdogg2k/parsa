@@ -7,7 +7,7 @@ function Toaster(props) {
     <Row>
       <Col xs={6}>
         <ToastContainer className="p-3" position='top-start'>
-          <Toast onClose={() => props.hideToast()} show={props.show} delay={3000} autohide bg='success'>
+          <Toast onClose={() => props.hideToast()} show={props.show} delay={3000} autohide bg={props.variant}>
             <Toast.Header>
               <img
                 src="holder.js/20x20?text=%20"

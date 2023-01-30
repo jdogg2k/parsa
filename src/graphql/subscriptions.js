@@ -6,7 +6,7 @@ export const onCreateCustomer = /* GraphQL */ `
     onCreateCustomer(filter: $filter) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -36,7 +36,7 @@ export const onUpdateCustomer = /* GraphQL */ `
     onUpdateCustomer(filter: $filter) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -66,7 +66,7 @@ export const onDeleteCustomer = /* GraphQL */ `
     onDeleteCustomer(filter: $filter) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -91,9 +91,11 @@ export const onDeleteCustomer = /* GraphQL */ `
     }
   }
 `;
-export const onCreateSegment = /* GraphQL */ `
-  subscription OnCreateSegment($filter: ModelSubscriptionSegmentFilterInput) {
-    onCreateSegment(filter: $filter) {
+export const onCreateCustomerGroup = /* GraphQL */ `
+  subscription OnCreateCustomerGroup(
+    $filter: ModelSubscriptionCustomerGroupFilterInput
+  ) {
+    onCreateCustomerGroup(filter: $filter) {
       id
       userID
       name
@@ -102,7 +104,7 @@ export const onCreateSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }
@@ -113,9 +115,11 @@ export const onCreateSegment = /* GraphQL */ `
     }
   }
 `;
-export const onUpdateSegment = /* GraphQL */ `
-  subscription OnUpdateSegment($filter: ModelSubscriptionSegmentFilterInput) {
-    onUpdateSegment(filter: $filter) {
+export const onUpdateCustomerGroup = /* GraphQL */ `
+  subscription OnUpdateCustomerGroup(
+    $filter: ModelSubscriptionCustomerGroupFilterInput
+  ) {
+    onUpdateCustomerGroup(filter: $filter) {
       id
       userID
       name
@@ -124,7 +128,7 @@ export const onUpdateSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }
@@ -135,9 +139,11 @@ export const onUpdateSegment = /* GraphQL */ `
     }
   }
 `;
-export const onDeleteSegment = /* GraphQL */ `
-  subscription OnDeleteSegment($filter: ModelSubscriptionSegmentFilterInput) {
-    onDeleteSegment(filter: $filter) {
+export const onDeleteCustomerGroup = /* GraphQL */ `
+  subscription OnDeleteCustomerGroup(
+    $filter: ModelSubscriptionCustomerGroupFilterInput
+  ) {
+    onDeleteCustomerGroup(filter: $filter) {
       id
       userID
       name
@@ -146,7 +152,7 @@ export const onDeleteSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }

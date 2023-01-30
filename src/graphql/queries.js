@@ -6,7 +6,7 @@ export const getCustomer = /* GraphQL */ `
     getCustomer(id: $id) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -41,7 +41,7 @@ export const listCustomers = /* GraphQL */ `
       items {
         id
         name
-        segmentID
+        customerGroupID
         CustomerData {
           nextToken
         }
@@ -52,16 +52,16 @@ export const listCustomers = /* GraphQL */ `
     }
   }
 `;
-export const customersBySegmentID = /* GraphQL */ `
-  query CustomersBySegmentID(
-    $segmentID: ID!
+export const customersByCustomerGroupID = /* GraphQL */ `
+  query CustomersByCustomerGroupID(
+    $customerGroupID: ID!
     $sortDirection: ModelSortDirection
     $filter: ModelCustomerFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    customersBySegmentID(
-      segmentID: $segmentID
+    customersByCustomerGroupID(
+      customerGroupID: $customerGroupID
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit
@@ -70,7 +70,7 @@ export const customersBySegmentID = /* GraphQL */ `
       items {
         id
         name
-        segmentID
+        customerGroupID
         CustomerData {
           nextToken
         }
@@ -81,9 +81,9 @@ export const customersBySegmentID = /* GraphQL */ `
     }
   }
 `;
-export const getSegment = /* GraphQL */ `
-  query GetSegment($id: ID!) {
-    getSegment(id: $id) {
+export const getCustomerGroup = /* GraphQL */ `
+  query GetCustomerGroup($id: ID!) {
+    getCustomerGroup(id: $id) {
       id
       userID
       name
@@ -92,7 +92,7 @@ export const getSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }
@@ -103,13 +103,13 @@ export const getSegment = /* GraphQL */ `
     }
   }
 `;
-export const listSegments = /* GraphQL */ `
-  query ListSegments(
-    $filter: ModelSegmentFilterInput
+export const listCustomerGroups = /* GraphQL */ `
+  query ListCustomerGroups(
+    $filter: ModelCustomerGroupFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listSegments(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listCustomerGroups(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
         userID

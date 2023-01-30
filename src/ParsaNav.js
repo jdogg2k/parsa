@@ -3,8 +3,8 @@ import React from 'react';
 
 export default class ParsaNav extends React.Component {
 
-  goToSegments = () => {
-    this.props.modeChange("segments");            
+  goToGroups = () => {
+    this.props.modeChange("groups");            
   }
 
   goToDataLoads = () => {
@@ -21,7 +21,7 @@ render() {
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto" defaultActiveKey="load">
             <Nav.Link eventKey="load" onClick={this.goToDataLoads}>Load Data</Nav.Link>
-            <Nav.Link eventKey="segments" onClick={this.goToSegments}>My Segments</Nav.Link>
+            <Nav.Link eventKey="segments" onClick={this.goToGroups}>My Customer Groups</Nav.Link>
             <NavDropdown title="Dropdown" id="collasible-nav-dropdown">
               <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
               <NavDropdown.Item href="#action/3.2">

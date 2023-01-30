@@ -45,3 +45,11 @@
 .toastSuccess {
   color: white;
 }
+
+.customerGroup {
+  text-align: left;
+}
+
+.clusterBtn { 
+  margin-top: 5px;
+}

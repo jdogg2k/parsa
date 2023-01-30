@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import SegmentModal from './modals/SegmentModal'
-import SegmentList from "./SegmentList";
+import CustomerGroupModel from './modals/CustomerGroupModal'
+import CustomerGroupList from "./CustomerGroupList";
 import ParsaNav from './ParsaNav'
 import Toaster from './Toaster'
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -14,26 +14,24 @@ import ExcelReader from './ExcelReader';
 import "@aws-amplify/ui-react/styles.css";
 import { API } from "aws-amplify";
 import { Container, Row, Col, Modal, Button, Alert, Form } from 'react-bootstrap';
-import { createCustomer, createSegment, createCustomerData } from './graphql/mutations';
+import { createCustomer, createCustomerGroup, createCustomerData } from './graphql/mutations';
+import { listCustomerGroups, getCustomerGroup } from "./graphql/queries";
 import {
   Heading,
   View,
   withAuthenticator,
 } from "@aws-amplify/ui-react";
-//import { listNotes } from "./graphql/queries";
-/*import {
-  createNote as createNoteMutation,
-  deleteNote as deleteNoteMutation,
-} from "./graphql/mutations";*/
-import currency from "currency.js"
+import currency from "currency.js";
 
 const App = ({ signOut, user }) => {
-  const [segmentOpen, openSegment] = useState(false);
+  const [groupModalOpen, openGroupModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState('success');
   const [showToast, setToastViz] = useState(false);
   const gridRef = useRef(); // Optional - for accessing Grid's API
   const [rowData, setRowData] = useState([]); // Set rowData to Array of Objects, one Object per Row
-  const [segmentModalShow, setSegmentModalShow] = useState(false);
+  const [groupData, setGroupData] = useState([]);
+  const [groupModalShow, setGroupModalShow] = useState(false);
   const [appMode, setAppMode] = useState("dataload");
  
   // Each Column Definition results in one Column.
@@ -43,13 +41,6 @@ const App = ({ signOut, user }) => {
   const defaultColDef = useMemo( ()=> ({
       sortable: true
     }));
- 
-  // Example of consuming Grid Event
-  /*const cellClickedListener = useCallback( event => {
-    console.log('cellClicked', event);
-  }, []);*/
-
-  //const [notes, setNotes] = useState([]);
 
   var filterParams = {
     comparator: (filterLocalDateAtMidnight, cellValue) => {
@@ -106,8 +97,9 @@ const App = ({ signOut, user }) => {
   
   }
 
-  function makeToast(msg) {
+  function makeToast(msg, variant) {
     setToastMessage(msg);
+    setToastVariant(variant);
     setToastViz(true);
   }
 
@@ -115,8 +107,8 @@ const App = ({ signOut, user }) => {
     setToastViz(false);
   }
 
-  function closeSegment() {
-    openSegment(false);
+  function closeGroupModal() {
+    openGroupModal(false);
   }
 
   function parseAWSDate(userDate) {
@@ -138,10 +130,32 @@ const App = ({ signOut, user }) => {
       return userDate;
     }
     
-
-  function saveSegmentData(segmentData) {
+  function createNewGroup() {
     const gridData = gridRef.current.api.getSelectedRows();
-    processSave(gridData, segmentData);
+    if (gridData.length > 0){
+      openGroupModal(true);
+    } else {
+      makeToast('No Customers Selected, cannot create group!', 'danger');
+    }
+    
+  }
+
+  async function getCustomerGroups() {
+    // List all items
+    const allCustomerGroups = await API.graphql({
+      query: listCustomerGroups,
+      variables: { userID: user.username}
+    });
+    setGroupData(allCustomerGroups.data.listCustomerGroups.items);
+  }
+
+  function saveGroupData(groupData) {
+    const gridData = gridRef.current.api.getSelectedRows();
+    processSave(gridData, groupData);
+  }
+
+  function doCluster(groupID) {
+    console.log(groupID);
   }
 
   async function saveCustomerDataRow(rowID, custID, cObj) {
@@ -175,13 +189,13 @@ const App = ({ signOut, user }) => {
 
   }
 
-  async function saveCustomer(cName, cData, segment) {
+  async function saveCustomer(cName, cData, group) {
 
     const newCustomer = await API.graphql({
       query: createCustomer,
       variables: { input: {
         "name": cName,
-        "segmentID": segment
+        "customerGroupID": group
       } }
     });
 
@@ -199,12 +213,12 @@ const App = ({ signOut, user }) => {
       description: sData.desc
     };
 
-    const newSegment = await API.graphql({
-      query: createSegment,
+    const newCustomerGroup = await API.graphql({
+      query: createCustomerGroup,
       variables: { input: data }
     });
 
-    var segmentID = newSegment.data.createSegment.id;
+    var groupID = newCustomerGroup.data.createCustomerGroup.id;
 
     //group customers
     const customers = gData.reduce((group, node) => {
@@ -216,12 +230,14 @@ const App = ({ signOut, user }) => {
 
     //loop through data and save each customer then the data
     Object.keys(customers).forEach(key => {
-      saveCustomer(key, customers[key], segmentID);
+      saveCustomer(key, customers[key], groupID);
     })
 
-    openSegment(false);
+    openGroupModal(false);
 
-    makeToast("Segment Data Saved Successfully")
+    makeToast("Customer Group Data Saved Successfully", "success");
+
+    handleMode("groups");
   }
   
 
@@ -239,10 +255,13 @@ const App = ({ signOut, user }) => {
 
   const onFirstDataRendered = useCallback((params) => {
     gridRef.current.api.sizeColumnsToFit();
-    gridRef.current.api.selectAll();
   }, []);
 
   const handleMode = (tMode) =>{
+    if (tMode == "groups") {
+      //get groups
+      getCustomerGroups();
+    }
     setAppMode(tMode);
   }
 
@@ -329,11 +348,11 @@ const App = ({ signOut, user }) => {
 
   return (
     <View className="App">
-      <Toaster show={showToast} message={toastMessage} hideToast={hideToast}/>
+      <Toaster show={showToast} message={toastMessage} variant={toastVariant} hideToast={hideToast}/>
       <ParsaNav username={user.username} handleSignOut={signOut} modeChange={handleMode} />
-      <Container className={appMode === 'segments' ? '' : 'd-none'}>
+      <Container className={appMode === 'groups' ? '' : 'd-none'}>
         <Row style={{marginTop: "10px"}}>
-          <Col><SegmentList /></Col>
+          <Col><CustomerGroupList data={groupData} handleCluster={doCluster}/></Col>
         </Row>
       </Container>
        <Container className={appMode === 'dataload' ? '' : 'd-none'}>
@@ -344,7 +363,7 @@ const App = ({ signOut, user }) => {
           <Col>
           { rowData.length > 0 ? <div className="ag-theme-alpine" style={{width: "100%", height: 500}}>
         <Alert key='warning' variant='warning'>
-          Adjust selected rows before data is saved - de-select a row to prevent it from saving
+          Select grouped customer rows of customers you want to add to a Customer Group
         </Alert>
         <AgGridReact
             ref={gridRef} // Ref for accessing Grid's API
@@ -363,15 +382,15 @@ const App = ({ signOut, user }) => {
             groupAggFiltering={true}
             />
             <br />
-            <Button onClick={() => openSegment(true)}>Save Data</Button>
+            <Button onClick={() => createNewGroup()}>Create Customer Group</Button>
       </div> : null }
           </Col>
         </Row>
       </Container>
-      <SegmentModal 
-            isOpen={segmentOpen} 
-            handleSubmit={saveSegmentData}
-            closeModal={closeSegment}
+      <CustomerGroupModel
+            isOpen={groupModalOpen} 
+            handleSubmit={saveGroupData}
+            closeModal={closeGroupModal}
           /> 
     </View>
   );

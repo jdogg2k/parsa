@@ -9,7 +9,7 @@ export const createCustomer = /* GraphQL */ `
     createCustomer(input: $input, condition: $condition) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -42,7 +42,7 @@ export const updateCustomer = /* GraphQL */ `
     updateCustomer(input: $input, condition: $condition) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -75,7 +75,7 @@ export const deleteCustomer = /* GraphQL */ `
     deleteCustomer(input: $input, condition: $condition) {
       id
       name
-      segmentID
+      customerGroupID
       CustomerData {
         items {
           id
@@ -100,12 +100,12 @@ export const deleteCustomer = /* GraphQL */ `
     }
   }
 `;
-export const createSegment = /* GraphQL */ `
-  mutation CreateSegment(
-    $input: CreateSegmentInput!
-    $condition: ModelSegmentConditionInput
+export const createCustomerGroup = /* GraphQL */ `
+  mutation CreateCustomerGroup(
+    $input: CreateCustomerGroupInput!
+    $condition: ModelCustomerGroupConditionInput
   ) {
-    createSegment(input: $input, condition: $condition) {
+    createCustomerGroup(input: $input, condition: $condition) {
       id
       userID
       name
@@ -114,7 +114,7 @@ export const createSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }
@@ -125,12 +125,12 @@ export const createSegment = /* GraphQL */ `
     }
   }
 `;
-export const updateSegment = /* GraphQL */ `
-  mutation UpdateSegment(
-    $input: UpdateSegmentInput!
-    $condition: ModelSegmentConditionInput
+export const updateCustomerGroup = /* GraphQL */ `
+  mutation UpdateCustomerGroup(
+    $input: UpdateCustomerGroupInput!
+    $condition: ModelCustomerGroupConditionInput
   ) {
-    updateSegment(input: $input, condition: $condition) {
+    updateCustomerGroup(input: $input, condition: $condition) {
       id
       userID
       name
@@ -139,7 +139,7 @@ export const updateSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }
@@ -150,12 +150,12 @@ export const updateSegment = /* GraphQL */ `
     }
   }
 `;
-export const deleteSegment = /* GraphQL */ `
-  mutation DeleteSegment(
-    $input: DeleteSegmentInput!
-    $condition: ModelSegmentConditionInput
+export const deleteCustomerGroup = /* GraphQL */ `
+  mutation DeleteCustomerGroup(
+    $input: DeleteCustomerGroupInput!
+    $condition: ModelCustomerGroupConditionInput
   ) {
-    deleteSegment(input: $input, condition: $condition) {
+    deleteCustomerGroup(input: $input, condition: $condition) {
       id
       userID
       name
@@ -164,7 +164,7 @@ export const deleteSegment = /* GraphQL */ `
         items {
           id
           name
-          segmentID
+          customerGroupID
           createdAt
           updatedAt
         }

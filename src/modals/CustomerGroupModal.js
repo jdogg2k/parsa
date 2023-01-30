@@ -1,7 +1,7 @@
 import React from "react";
 import { Form, Modal, Button } from 'react-bootstrap';
 
-export default class SegmentModal extends React.Component {
+export default class CustomerGroupModel extends React.Component {
 
   state={ name: '', desc: '' }
 
@@ -18,12 +18,12 @@ export default class SegmentModal extends React.Component {
         centered>
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
-            Save Data Segment
+            Save Customer Group
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Segment Name</Form.Label>
+              <Form.Label>Group Name</Form.Label>
               <Form.Control type="text" value={this.state.name} onChange={this.changeName}/>
             </Form.Group>
             <Form.Group className="mb-3">

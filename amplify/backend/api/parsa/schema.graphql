@@ -1,16 +1,16 @@
 type Customer @model @auth(rules: [{allow: public}]) {
   id: ID!
   name: String
-  segmentID: ID! @index(name: "bySegment")
+  customerGroupID: ID! @index(name: "byCustomerGroup")
   CustomerData: [CustomerData] @hasMany(indexName: "byCustomer", fields: ["id"])
 }
 
-type Segment @model @auth(rules: [{allow: public}]) {
+type CustomerGroup @model @auth(rules: [{allow: public}]) {
   id: ID!
   userID: String!
   name: String!
   description: String
-  Customers: [Customer] @hasMany(indexName: "bySegment", fields: ["id"])
+  Customers: [Customer] @hasMany(indexName: "byCustomerGroup", fields: ["id"])
 }
 
 type CustomerData @model @auth(rules: [{allow: public}]) {
