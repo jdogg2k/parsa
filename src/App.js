@@ -15,7 +15,7 @@ import "@aws-amplify/ui-react/styles.css";
 import { API } from "aws-amplify";
 import { Container, Row, Col, Modal, Button, Alert, Form } from 'react-bootstrap';
 import { createCustomer, createCustomerGroup, createCustomerData } from './graphql/mutations';
-import { listCustomerGroups, getCustomerGroup } from "./graphql/queries";
+import { listCustomerGroups, getCustomerGroup, listCustomers, getCustomer, listCustomerData, getCustomerData } from "./graphql/queries";
 import {
   Heading,
   View,
@@ -31,6 +31,7 @@ const App = ({ signOut, user }) => {
   const gridRef = useRef(); // Optional - for accessing Grid's API
   const [rowData, setRowData] = useState([]); // Set rowData to Array of Objects, one Object per Row
   const [groupData, setGroupData] = useState([]);
+  const [rawCustomerData, setRawCustomerData] = useState([]);
   const [groupModalShow, setGroupModalShow] = useState(false);
   const [appMode, setAppMode] = useState("dataload");
  
@@ -154,8 +155,95 @@ const App = ({ signOut, user }) => {
     processSave(gridData, groupData);
   }
 
-  function doCluster(groupID) {
-    console.log(groupID);
+  async function doCluster(groupID) {
+    //first get customers per group
+    // Query with filters, limits, and pagination
+    let custFilter = {
+      customerGroupID: {
+          eq: groupID
+      }
+    };
+    const myCustomers = await API.graphql({
+      query: listCustomers,
+      variables: { filter: custFilter }
+    });
+    let custData = myCustomers.data.listCustomers.items;
+
+    var custIDs = [];
+    custData.forEach(function(cObj) {
+      custIDs.push({ customerID: { eq: cObj.id } });
+    });
+
+    let dataFilter = {
+      or: custIDs
+    }
+
+    const fullData = await API.graphql({ query: listCustomerData, variables: { filter: dataFilter } });
+
+    var allData = fullData.data.listCustomerData.items;
+
+    //sort
+    allData.sort((a, b) => (a.customerID > b.customerID) ? 1 : -1);
+
+    console.log(allData);
+
+    //add customer names + aggregations
+    var customerAggregations = [];
+    var sumCounts = {};
+
+    custData.forEach(function(cObj) {
+
+      sumCounts.serviceRevenue = 0;
+      sumCounts.unitRevenue = 0;
+      sumCounts.quantity = 0;
+      sumCounts.costOfGoodsSold = 0;
+      sumCounts.costOfServices = 0;
+
+      var newCust = {};
+      newCust.id = cObj.id;
+      newCust.name = cObj.name;
+
+      //filter raw data
+      newCust.rawData = allData.filter(function(data) {
+        return data.customerID === cObj.id;
+      });
+
+      //sum values
+      newCust.rawData.forEach(function(tData) {
+        sumCounts.serviceRevenue += tData.service_revenue;
+        sumCounts.unitRevenue += tData.unit_revenue;
+        sumCounts.quantity += tData.quantity;
+        sumCounts.costOfGoodsSold += tData.cost_of_goods_sold;
+        sumCounts.costOfServices += tData.cost_of_services;
+      });
+
+      //set calculations
+      newCust.sales_volume = (sumCounts.unitRevenue * sumCounts.quantity) + sumCounts.serviceRevenue;
+      newCust.total_cost = (sumCounts.costOfGoodsSold * sumCounts.quantity) + sumCounts.costOfServices;
+      newCust.product_margin = ((((sumCounts.unitRevenue - sumCounts.costOfGoodsSold) * sumCounts.quantity) / (sumCounts.costOfGoodsSold * sumCounts.quantity)) * 100).toFixed(2);
+      if (sumCounts.serviceRevenue === 0 && sumCounts.costOfServices === 0) {
+        newCust.service_margin = 0;
+      } else {
+        newCust.service_margin = (((sumCounts.serviceRevenue - sumCounts.costOfServices) / sumCounts.costOfServices) * 100).toFixed(2);
+      }
+      newCust.overall_margin = (((((sumCounts.unitRevenue - sumCounts.costOfGoodsSold) * sumCounts.quantity) + (sumCounts.serviceRevenue - sumCounts.costOfServices)) / ((sumCounts.costOfGoodsSold * sumCounts.quantity) + sumCounts.costOfServices)) * 100).toFixed(2);
+
+      //todo calcs
+      //Annual Revenue = (Total Revenue)/[(Today’s Date – Earliest Transaction Date)/365] per Customer Name
+      //Annual Cost = (Total Cost)/[(Today’s Date – Earliest Transaction Date)/365] per Customer Name
+
+      customerAggregations.push(newCust);
+
+    });
+
+    //console.log(allData);
+    console.log(customerAggregations);
+    /*setRawCustomerData(allData);
+    console.log(allData);
+    console.log(rawCustomerData);*/
+
+    //make clusters
+
   }
 
   async function saveCustomerDataRow(rowID, custID, cObj) {
@@ -258,7 +346,7 @@ const App = ({ signOut, user }) => {
   }, []);
 
   const handleMode = (tMode) =>{
-    if (tMode == "groups") {
+    if (tMode === "groups") {
       //get groups
       getCustomerGroups();
     }
