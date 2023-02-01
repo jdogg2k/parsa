@@ -15,7 +15,7 @@ import "@aws-amplify/ui-react/styles.css";
 import { API } from "aws-amplify";
 import { Container, Row, Col, Modal, Button, Alert, Form } from 'react-bootstrap';
 import { createCustomer, createCustomerGroup, createCustomerData } from './graphql/mutations';
-import { listCustomerGroups, getCustomerGroup, listCustomers, getCustomer, listCustomerData, getCustomerData } from "./graphql/queries";
+import { listCustomerGroups, customersByCustomerGroupID, customerDataByCustomerID, listCustomers, getCustomer, listCustomerData, getCustomerData } from "./graphql/queries";
 import {
   Heading,
   View,
@@ -31,38 +31,14 @@ markerClusters(Highcharts);
 
 const App = ({ signOut, user }) => {
 
-  const Data = [
-    {
-      id: 1,
-      year: 2016,
-      userGain: 80000,
-      userLost: 823
-    },
-    {
-      id: 2,
-      year: 2017,
-      userGain: 45677,
-      userLost: 345
-    },
-    {
-      id: 3,
-      year: 2018,
-      userGain: 78888,
-      userLost: 555
-    },
-    {
-      id: 4,
-      year: 2019,
-      userGain: 90000,
-      userLost: 4555
-    },
-    {
-      id: 5,
-      year: 2020,
-      userGain: 4300,
-      userLost: 234
+  Highcharts.setOptions({
+    lang: {
+      thousandsSep: ','
     }
-  ];
+  });
+
+
+  const [plotData, setPlotData] = useState([]);
 
   const options = {
     chart: {
@@ -70,15 +46,15 @@ const App = ({ signOut, user }) => {
         zoomType: 'xy'
     },
     title: {
-        text: 'Height Versus Weight of 507 Individuals'
-    },
-    subtitle: {
-        text: 'Source: Heinz  2003'
+        text: 'Customer Metrics'
     },
     xAxis: {
         title: {
             enabled: true,
-            text: 'Height (cm)'
+            text: 'Sales Volume'
+        },
+        labels: {
+          format: '${value:,.0f}'
         },
         startOnTick: true,
         endOnTick: true,
@@ -86,7 +62,7 @@ const App = ({ signOut, user }) => {
     },
     yAxis: {
         title: {
-            text: 'Weight (kg)'
+            text: 'Overall Margin %'
         }
     },
     legend: {
@@ -96,11 +72,11 @@ const App = ({ signOut, user }) => {
         scatter: {
             dataLabels: {
                 enabled: true,
-                pointFormat: ''
+                pointFormat: '{point.name}'
             },
             tooltip: {
-                headerFormat: '<b>{series.name}</b><br>',
-                pointFormat: '{point.x} cm, {point.y} kg',
+                headerFormat: '<b>{point.name}</b><br>',
+                pointFormat: '${point.x:,.2f}, {point.y}%',
                 clusterFormat: 'Clustered points: {point.clusterPointsAmount}'
             },
             marker: {
@@ -155,257 +131,9 @@ const App = ({ signOut, user }) => {
         }
     },
     series: [{
-        name: 'Male',
+        name: 'Customers',
         color: 'rgba(119, 152, 191, .5)',
-        data: [
-            [174.0, 65.6],
-            [175.3, 71.8],
-            [193.5, 80.7],
-            [186.5, 72.6],
-            [187.2, 78.8],
-            [181.5, 74.8],
-            [184.0, 86.4],
-            [184.5, 78.4],
-            [175.0, 62.0],
-            [184.0, 81.6],
-            [180.0, 76.6],
-            [177.8, 83.6],
-            [192.0, 90.0],
-            [176.0, 74.6],
-            [174.0, 71.0],
-            [184.0, 79.6],
-            [192.7, 93.8],
-            [171.5, 70.0],
-            [173.0, 72.4],
-            [176.0, 85.9],
-            [176.0, 78.8],
-            [180.5, 77.8],
-            [172.7, 66.2],
-            [176.0, 86.4],
-            [173.5, 81.8],
-            [178.0, 89.6],
-            [180.3, 82.8],
-            [180.3, 76.4],
-            [164.5, 63.2],
-            [173.0, 60.9],
-            [183.5, 74.8],
-            [175.5, 70.0],
-            [188.0, 72.4],
-            [189.2, 84.1],
-            [172.8, 69.1],
-            [170.0, 59.5],
-            [182.0, 67.2],
-            [170.0, 61.3],
-            [177.8, 68.6],
-            [184.2, 80.1],
-            [186.7, 87.8],
-            [171.4, 84.7],
-            [172.7, 73.4],
-            [175.3, 72.1],
-            [180.3, 82.6],
-            [182.9, 88.7],
-            [188.0, 84.1],
-            [177.2, 94.1],
-            [172.1, 74.9],
-            [167.0, 59.1],
-            [169.5, 75.6],
-            [174.0, 86.2],
-            [172.7, 75.3],
-            [182.2, 87.1],
-            [164.1, 55.2],
-            [163.0, 57.0],
-            [171.5, 61.4],
-            [184.2, 76.8],
-            [174.0, 86.8],
-            [174.0, 72.2],
-            [177.0, 71.6],
-            [186.0, 84.8],
-            [167.0, 68.2],
-            [171.8, 66.1],
-            [182.0, 72.0],
-            [167.0, 64.6],
-            [177.8, 74.8],
-            [164.5, 70.0],
-            [192.0, 101.6],
-            [175.5, 63.2],
-            [171.2, 79.1],
-            [181.6, 78.9],
-            [167.4, 67.7],
-            [181.1, 66.0],
-            [177.0, 68.2],
-            [174.5, 63.9],
-            [177.5, 72.0],
-            [170.5, 56.8],
-            [182.4, 74.5],
-            [197.1, 90.9],
-            [180.1, 93.0],
-            [175.5, 80.9],
-            [180.6, 72.7],
-            [184.4, 68.0],
-            [175.5, 70.9],
-            [180.6, 72.5],
-            [177.0, 72.5],
-            [177.1, 83.4],
-            [181.6, 75.5],
-            [176.5, 73.0],
-            [175.0, 70.2],
-            [174.0, 73.4],
-            [165.1, 70.5],
-            [177.0, 68.9],
-            [192.0, 102.3],
-            [176.5, 68.4],
-            [169.4, 65.9],
-            [182.1, 75.7],
-            [179.8, 84.5],
-            [175.3, 87.7],
-            [184.9, 86.4],
-            [177.3, 73.2],
-            [167.4, 53.9],
-            [178.1, 72.0],
-            [168.9, 55.5],
-            [157.2, 58.4],
-            [180.3, 83.2],
-            [170.2, 72.7],
-            [177.8, 64.1],
-            [172.7, 72.3],
-            [165.1, 65.0],
-            [186.7, 86.4],
-            [165.1, 65.0],
-            [174.0, 88.6],
-            [175.3, 84.1],
-            [185.4, 66.8],
-            [177.8, 75.5],
-            [180.3, 93.2],
-            [180.3, 82.7],
-            [177.8, 58.0],
-            [177.8, 79.5],
-            [177.8, 78.6],
-            [177.8, 71.8],
-            [177.8, 116.4],
-            [163.8, 72.2],
-            [188.0, 83.6],
-            [198.1, 85.5],
-            [175.3, 90.9],
-            [166.4, 85.9],
-            [190.5, 89.1],
-            [166.4, 75.0],
-            [177.8, 77.7],
-            [179.7, 86.4],
-            [172.7, 90.9],
-            [190.5, 73.6],
-            [185.4, 76.4],
-            [168.9, 69.1],
-            [167.6, 84.5],
-            [175.3, 64.5],
-            [170.2, 69.1],
-            [190.5, 108.6],
-            [177.8, 86.4],
-            [190.5, 80.9],
-            [177.8, 87.7],
-            [184.2, 94.5],
-            [176.5, 80.2],
-            [177.8, 72.0],
-            [180.3, 71.4],
-            [171.4, 72.7],
-            [172.7, 84.1],
-            [172.7, 76.8],
-            [177.8, 63.6],
-            [177.8, 80.9],
-            [182.9, 80.9],
-            [170.2, 85.5],
-            [167.6, 68.6],
-            [175.3, 67.7],
-            [165.1, 66.4],
-            [185.4, 102.3],
-            [181.6, 70.5],
-            [172.7, 95.9],
-            [190.5, 84.1],
-            [179.1, 87.3],
-            [175.3, 71.8],
-            [170.2, 65.9],
-            [193.0, 95.9],
-            [171.4, 91.4],
-            [177.8, 81.8],
-            [177.8, 96.8],
-            [167.6, 69.1],
-            [167.6, 82.7],
-            [180.3, 75.5],
-            [182.9, 79.5],
-            [176.5, 73.6],
-            [186.7, 91.8],
-            [188.0, 84.1],
-            [188.0, 85.9],
-            [177.8, 81.8],
-            [174.0, 82.5],
-            [177.8, 80.5],
-            [171.4, 70.0],
-            [185.4, 81.8],
-            [185.4, 84.1],
-            [188.0, 90.5],
-            [188.0, 91.4],
-            [182.9, 89.1],
-            [176.5, 85.0],
-            [175.3, 69.1],
-            [175.3, 73.6],
-            [188.0, 80.5],
-            [188.0, 82.7],
-            [175.3, 86.4],
-            [170.5, 67.7],
-            [179.1, 92.7],
-            [177.8, 93.6],
-            [175.3, 70.9],
-            [182.9, 75.0],
-            [170.8, 93.2],
-            [188.0, 93.2],
-            [180.3, 77.7],
-            [177.8, 61.4],
-            [185.4, 94.1],
-            [168.9, 75.0],
-            [185.4, 83.6],
-            [180.3, 85.5],
-            [174.0, 73.9],
-            [167.6, 66.8],
-            [182.9, 87.3],
-            [160.0, 72.3],
-            [180.3, 88.6],
-            [167.6, 75.5],
-            [186.7, 101.4],
-            [175.3, 91.1],
-            [175.3, 67.3],
-            [175.9, 77.7],
-            [175.3, 81.8],
-            [179.1, 75.5],
-            [181.6, 84.5],
-            [177.8, 76.6],
-            [182.9, 85.0],
-            [177.8, 102.5],
-            [184.2, 77.3],
-            [179.1, 71.8],
-            [176.5, 87.9],
-            [188.0, 94.3],
-            [174.0, 70.9],
-            [167.6, 64.5],
-            [170.2, 77.3],
-            [167.6, 72.3],
-            [188.0, 87.3],
-            [174.0, 80.0],
-            [176.5, 82.3],
-            [180.3, 73.6],
-            [167.6, 74.1],
-            [188.0, 85.9],
-            [180.3, 73.2],
-            [167.6, 76.3],
-            [183.0, 65.9],
-            [183.0, 90.9],
-            [179.1, 89.1],
-            [170.2, 62.3],
-            [177.8, 82.7],
-            [179.1, 79.1],
-            [190.5, 98.2],
-            [177.8, 84.1],
-            [180.3, 83.2],
-            [180.3, 83.2]
-        ]
+        data: plotData
     }]
 };
 
@@ -420,25 +148,6 @@ const App = ({ signOut, user }) => {
   const [rawCustomerData, setRawCustomerData] = useState([]);
   const [groupModalShow, setGroupModalShow] = useState(false);
   const [appMode, setAppMode] = useState("dataload");
-  const [chartData, setChartData] = useState({
-    labels: Data.map((data) => data.year), 
-    datasets: [
-      {
-        label: "Users Gained ",
-        data: Data.map((data) => data.userGain),
-        backgroundColor: [
-          "rgba(75,192,192,1)",
-          "#ecf0f1",
-          "#50AF95",
-          "#f3ba2f",
-          "#2a71d0"
-        ],
-        borderColor: "black",
-        borderWidth: 2
-      }
-    ]
-  });
-
  
   // Each Column Definition results in one Column.
   const [columnDefs, setColumnDefs] = useState([]);
@@ -560,39 +269,32 @@ const App = ({ signOut, user }) => {
     processSave(gridData, groupData);
   }
 
+  async function getDataForCustomer(cID) {
+    // List all items
+    const cData = await API.graphql({
+      query: customerDataByCustomerID,
+      variables: { customerID: cID}
+    });
+    return cData.data.customerDataByCustomerID.items;
+  }
+
   async function doCluster(groupID) {
+
+    console.log(groupID);
+
     //first get customers per group
-    // Query with filters, limits, and pagination
-    let custFilter = {
-      customerGroupID: {
-          eq: groupID
-      }
-    };
     const myCustomers = await API.graphql({
-      query: listCustomers,
-      variables: { filter: custFilter }
-    });
-    let custData = myCustomers.data.listCustomers.items;
-
-    var custIDs = [];
-    custData.forEach(function(cObj) {
-      custIDs.push({ customerID: { eq: cObj.id } });
+      query: customersByCustomerGroupID,
+      variables: { customerGroupID: groupID, limit: 500 }
     });
 
-    let dataFilter = {
-      or: custIDs
-    }
+    let custData = myCustomers.data.customersByCustomerGroupID.items;
 
-    const fullData = await API.graphql({ query: listCustomerData, variables: { filter: dataFilter } });
+    await Promise.all(custData.map(async (cObj) => {
+      cObj.rawData = await getDataForCustomer(cObj.id); //add in raw data
+    }));
 
-    var allData = fullData.data.listCustomerData.items;
-
-    //sort
-    allData.sort((a, b) => (a.customerID > b.customerID) ? 1 : -1);
-
-    console.log(allData);
-
-    //add customer names + aggregations
+    //add aggregations
     var customerAggregations = [];
     var sumCounts = {};
 
@@ -608,13 +310,8 @@ const App = ({ signOut, user }) => {
       newCust.id = cObj.id;
       newCust.name = cObj.name;
 
-      //filter raw data
-      newCust.rawData = allData.filter(function(data) {
-        return data.customerID === cObj.id;
-      });
-
       //sum values
-      newCust.rawData.forEach(function(tData) {
+      cObj.rawData.forEach(function(tData) {
         sumCounts.serviceRevenue += tData.service_revenue;
         sumCounts.unitRevenue += tData.unit_revenue;
         sumCounts.quantity += tData.quantity;
@@ -641,12 +338,18 @@ const App = ({ signOut, user }) => {
 
     });
 
-    //console.log(allData);
-    //console.log(customerAggregations);
-    /*setRawCustomerData(allData);
-    console.log(allData);
-    console.log(rawCustomerData);*/
+    console.log(custData);
+    console.log(customerAggregations);
 
+    var pData = [];
+
+    customerAggregations.map((aggObj) => {
+      pData.push({"name" : aggObj.name, "x" : aggObj.sales_volume, "y" : aggObj.overall_margin});
+    })
+
+    setPlotData(pData);
+
+    /*
     //make clusters
     // Create the data 2D-array (vectors) describing the data
    /*let vectors = new Array();
@@ -660,23 +363,23 @@ const App = ({ signOut, user }) => {
     });*/
 
     // Data source: LinkedIn
-const data = [
+/*const data = [
   {'company': 'Microsoft' , 'size': 91259, 'revenue': 60420},
   {'company': 'IBM' , 'size': 400000, 'revenue': 98787},
   {'company': 'Skype' , 'size': 700, 'revenue': 716},
   {'company': 'SAP' , 'size': 48000, 'revenue': 11567},
   {'company': 'Yahoo!' , 'size': 14000 , 'revenue': 6426 },
   {'company': 'eBay' , 'size': 15000, 'revenue': 8700},
-];
+];*/
  
 // Create the data 2D-array (vectors) describing the data
-let vectors = new Array();
+/*let vectors = new Array();
 for (let i = 0 ; i < customerAggregations.length ; i++) {
   vectors[i] = [ customerAggregations[i]['sales_volume'] , customerAggregations[i]['overall_margin']];
 }
 
 let result = kmeans(vectors, 3);
-console.log(result);
+console.log(result);*/
 
 handleMode("cluster");
 
