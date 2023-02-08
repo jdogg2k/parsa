@@ -20,6 +20,7 @@ render() {
           </div>
 
             <Button onClick={() => this.props.handleCluster(group.id)} className="btn-info clusterBtn">Cluster Data</Button>
+            <Button onClick={() => this.props.handleDelete(group.id)} className="btn-danger deleteBtn">Delete</Button>
           </ListGroup.Item>
         )
       })}

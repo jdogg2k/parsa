@@ -53,3 +53,21 @@
 .clusterBtn { 
   margin-top: 5px;
 }
+
+.deleteBtn { 
+  margin-top: 5px;
+  margin-left: 5px;
+}
+
+.topIntro {
+  margin-top: 25px;
+}
+
+.parseIntro {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.signikaText {
+  font-family: 'Poppins', sans-serif;
+}

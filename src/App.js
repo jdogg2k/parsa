@@ -13,8 +13,8 @@ import "./App.css";
 import ExcelReader from './ExcelReader';
 import "@aws-amplify/ui-react/styles.css";
 import { API } from "aws-amplify";
-import { Container, Row, Col, Modal, Button, Alert, Form } from 'react-bootstrap';
-import { createCustomer, createCustomerGroup, createCustomerData } from './graphql/mutations';
+import { Container, Row, Col, Modal, Button, Alert, Image } from 'react-bootstrap';
+import { createCustomer, createCustomerGroup, createCustomerData, deleteCustomer, deleteCustomerGroup, deleteCustomerData } from './graphql/mutations';
 import { listCustomerGroups, customersByCustomerGroupID, customerDataByCustomerID, listCustomers, getCustomer, listCustomerData, getCustomerData } from "./graphql/queries";
 import {
   Heading,
@@ -85,9 +85,12 @@ const App = ({ signOut, user }) => {
             cluster: {
                 enabled: true,
                 allowOverlap: false,
-                layoutAlgorithm: {
+                /*layoutAlgorithm: {
                     type: 'kmeans',
                     distance: '7%'
+                },*/
+                layoutAlgorithm: {
+                  type: 'optimalizedKmeans'
                 },
                 dataLabels: {
                     style: {
@@ -269,6 +272,72 @@ const App = ({ signOut, user }) => {
     processSave(gridData, groupData);
   }
 
+  async function deleteThisGroup(gID) {
+    const deletedCustomerGroup = await API.graphql({
+        query: deleteCustomerGroup,
+        variables: {
+            input: {
+                id: gID
+            }
+        }
+    });
+  }
+
+  async function deleteThisCustomer(cID) {
+    const deletedCustomer = await API.graphql({
+        query: deleteCustomer,
+        variables: {
+            input: {
+                id: cID
+            }
+        }
+    });
+  }
+
+  async function deleteThisCustomerData(dID) {
+    const deletedCustomerData = await API.graphql({
+        query: deleteCustomerData,
+        variables: {
+            input: {
+                id: dID
+            }
+        }
+    });
+  }
+
+  async function doGroupDelete(groupID) {
+
+    if (window.confirm("Are you sure want to permanently delete all customer data for this group?") == true) {
+      //first get customers per group
+      const myCustomers = await API.graphql({
+        query: customersByCustomerGroupID,
+        variables: { customerGroupID: groupID, limit: 500 }
+      });
+
+      let tCustomers = myCustomers.data.customersByCustomerGroupID.items;
+
+
+
+      await Promise.all(tCustomers.map(async (cObj) => {  //delete customer data first
+        var custData = await getDataForCustomer(cObj.id); //get raw row info
+        custData.forEach(async function(cObj) {
+            await deleteThisCustomerData(cObj.id); //delete each data row
+        });
+      }));
+
+      await Promise.all(tCustomers.map(async (cObj) => {  //delete customers next
+        await deleteThisCustomer(cObj.id); 
+      }));
+
+      await deleteThisGroup(groupID); //finally delete group
+
+      makeToast("Group Deleted Successfully!", "success");
+
+      getCustomerGroups(); //reset group data
+    }
+
+  }
+
   async function getDataForCustomer(cID) {
     // List all items
     const cData = await API.graphql({
@@ -279,8 +348,6 @@ const App = ({ signOut, user }) => {
   }
 
   async function doCluster(groupID) {
-
-    console.log(groupID);
 
     //first get customers per group
     const myCustomers = await API.graphql({
@@ -338,8 +405,8 @@ const App = ({ signOut, user }) => {
 
     });
 
-    console.log(custData);
-    console.log(customerAggregations);
+    //console.log(custData);
+    //console.log(customerAggregations);
 
     var pData = [];
 
@@ -582,10 +649,19 @@ handleMode("cluster");
       </Container>
       <Container className={appMode === 'groups' ? '' : 'd-none'}>
         <Row style={{marginTop: "10px"}}>
-          <Col><CustomerGroupList data={groupData} handleCluster={doCluster}/></Col>
+          <Col><CustomerGroupList data={groupData} handleCluster={doCluster} handleDelete={doGroupDelete}/></Col>
         </Row>
       </Container>
        <Container className={appMode === 'dataload' ? '' : 'd-none'}>
+       <div className={rowData.length == 0 ? '' : 'd-none'}>
+      <h1 className="signikaText topIntro">Welcome to Parsa</h1>
+      <h6 className="signikaText text-muted pb-3">Import customer data and visualize meaningful patterns.</h6>
+      <div className="signikaText">
+        Load Data below or view your previously imported <Button onClick={() => handleMode('groups')} className="btn btn-opacity-light mr-1">Customer Groups</Button>
+       
+      </div>
+      <Image src="/Group171.svg" alt="" className="img-fluid parseIntro" />
+    </div>
         <Row style={{marginTop: "10px"}}>
           <Col><ExcelReader excelData={handleData} /></Col>
         </Row>
