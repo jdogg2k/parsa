@@ -68,6 +68,31 @@ const App = ({ signOut, user }) => {
     legend: {
         enabled: false
     },
+    tooltip: {
+      formatter: function () {
+          if (this.point.clusteredData) {
+            var tX = this.point.clusteredData[0].x;
+            var tY = this.point.clusteredData[0].y;
+            var sameX = this.point.clusteredData.every(item => item.x === tX);
+            var sameY = this.point.clusteredData.every(item => item.y === tY);
+
+            if (sameX && sameY) { //allsame
+              var custs = [];
+              this.point.clusteredData.forEach(function(cust) {
+                  custs.push(cust.options.name);
+              });
+              var tipText = "<b>" + custs.join(", ") + "</b>";
+              tipText += '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b>';
+              return tipText;
+            } else {
+              return 'Clustered points: ' + this.point.clusterPointsAmount;
+            }
+
+          } else {
+            return 'Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b>';
+          }
+      }
+  },
     plotOptions: {
         scatter: {
             dataLabels: {
@@ -76,8 +101,7 @@ const App = ({ signOut, user }) => {
             },
             tooltip: {
                 headerFormat: '<b>{point.name}</b><br>',
-                pointFormat: '${point.x:,.2f}, {point.y}%',
-                clusterFormat: 'Clustered points: {point.clusterPointsAmount}'
+                pointFormat: '${point.x:,.2f}, {point.y}%'
             },
             marker: {
                 radius: 5
@@ -407,6 +431,9 @@ const App = ({ signOut, user }) => {
 
     //console.log(custData);
     //console.log(customerAggregations);
+
+    //const samerows = customerAggregations.filter((agg) => agg.sales_volume === 16590);
+    //console.log(samerows);
 
     var pData = [];
 
