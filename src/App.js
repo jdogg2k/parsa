@@ -39,7 +39,7 @@ const App = ({ signOut, user }) => {
 
 
   const [plotData, setPlotData] = useState([]);
-
+  const [seriesData, setSeriesData] = useState([]);
   const options = {
     chart: {
         type: 'scatter',
@@ -66,7 +66,7 @@ const App = ({ signOut, user }) => {
         }
     },
     legend: {
-        enabled: false
+        enabled: true
     },
     tooltip: {
       formatter: function () {
@@ -96,7 +96,7 @@ const App = ({ signOut, user }) => {
     plotOptions: {
         scatter: {
             dataLabels: {
-                enabled: true,
+                enabled: false,
                 pointFormat: '{point.name}'
             },
             tooltip: {
@@ -107,15 +107,15 @@ const App = ({ signOut, user }) => {
                 radius: 5
             },
             cluster: {
-                enabled: true,
+                enabled: false,
                 allowOverlap: false,
                 /*layoutAlgorithm: {
                     type: 'kmeans',
                     distance: '7%'
-                },*/
+                },
                 layoutAlgorithm: {
                   type: 'optimalizedKmeans'
-                },
+                },*/
                 dataLabels: {
                     style: {
                         fontSize: '9px'
@@ -125,7 +125,7 @@ const App = ({ signOut, user }) => {
                 marker: {
                     lineColor: 'rgba(0, 0, 0, 0.1)'
                 },
-                zones: [{
+                /*zones: [{
                     from: 1,
                     to: 2,
                     marker: {
@@ -153,15 +153,11 @@ const App = ({ signOut, user }) => {
                         fillColor: '#2583C5',
                         radius: 18
                     }
-                }]
+                }]*/
             }
         }
     },
-    series: [{
-        name: 'Customers',
-        color: 'rgba(119, 152, 191, .5)',
-        data: plotData
-    }]
+    series: seriesData
 };
 
 
@@ -175,14 +171,16 @@ const App = ({ signOut, user }) => {
   const [rawCustomerData, setRawCustomerData] = useState([]);
   const [groupModalShow, setGroupModalShow] = useState(false);
   const [appMode, setAppMode] = useState("dataload");
+
+  const cPallete = ['#ff676c', '#7e82ed', '#ffae1d', '#42b79b', '#d688d1', '#000000'];
  
   // Each Column Definition results in one Column.
   const [columnDefs, setColumnDefs] = useState([]);
  
   // DefaultColDef sets props common to all Columns
   const defaultColDef = useMemo( ()=> ({
-      sortable: true
-    }));
+    sortable: true
+  }));
 
   var filterParams = {
     comparator: (filterLocalDateAtMidnight, cellValue) => {
@@ -441,8 +439,8 @@ const App = ({ signOut, user }) => {
       pData.push({"name" : aggObj.name, "x" : aggObj.sales_volume, "y" : aggObj.overall_margin});
     })
 
-    setPlotData(pData);
-
+    //setPlotData(pData);
+    
     /*
     //make clusters
     // Create the data 2D-array (vectors) describing the data
@@ -467,13 +465,38 @@ const App = ({ signOut, user }) => {
 ];*/
  
 // Create the data 2D-array (vectors) describing the data
-/*let vectors = new Array();
+let vectors = new Array();
 for (let i = 0 ; i < customerAggregations.length ; i++) {
   vectors[i] = [ customerAggregations[i]['sales_volume'] , customerAggregations[i]['overall_margin']];
 }
 
-let result = kmeans(vectors, 3);
-console.log(result);*/
+let clusterResult = kmeans(vectors, 4);
+let clusterSeries = [];
+let cNum = 1;
+
+clusterResult.clusters.map((cluster) => {
+  //build points data
+  let pointsData = [];
+
+  cluster.points.map((pointObj) => {
+    pointsData.push({"x" : pointObj[0], "y" : pointObj[1]})
+  })
+
+  //set cluster
+  clusterSeries.push({
+    name: 'Customer Cluster ' + cNum,
+    color: cPallete[cNum - 1],
+    data: pointsData
+  });
+
+  cNum++;
+})
+
+setSeriesData(clusterSeries);
+
+
+console.log(clusterResult);
+console.log(pData);
 
 handleMode("cluster");
 
