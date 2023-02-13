@@ -7,7 +7,7 @@ function randomBetween(min, max) {
 }
 
 function calcMeanCentroid(dataSet, start, end) {
-  const features = dataSet[0].length;
+  const features = (dataSet[0].length - 1); //do not calculate end of object
   const n = end - start;
   let mean = [];
   for (let i = 0; i < features; i++) {
@@ -100,13 +100,14 @@ function getLabels(dataSet, centroids) {
   for (let c = 0; c < centroids.length; c++) {
     labels[c] = {
       points: [],
-      centroid: centroids[c],
+      centroid: centroids[c]
     };
   }
   // For each element in the dataset, choose the closest centroid. 
   // Make that centroid the element's label.
   for (let i = 0; i < dataSet.length; i++) {
-    const a = dataSet[i];
+    const a = [dataSet[i][0], dataSet[i][1]];
+    const raw = dataSet[i][2];
     let closestCentroid, closestCentroidIndex, prevDistance;
     for (let j = 0; j < centroids.length; j++) {
       let centroid = centroids[j];
@@ -124,7 +125,11 @@ function getLabels(dataSet, centroids) {
         }
       }
     }
-    // add point to centroid labels:
+
+    //add in raw data
+    a.push(raw);
+
+    // add point to centroid labels: 
     labels[closestCentroidIndex].points.push(a);
   }
   return labels;

@@ -70,28 +70,17 @@ const App = ({ signOut, user }) => {
     },
     tooltip: {
       formatter: function () {
-          if (this.point.clusteredData) {
-            var tX = this.point.clusteredData[0].x;
-            var tY = this.point.clusteredData[0].y;
-            var sameX = this.point.clusteredData.every(item => item.x === tX);
-            var sameY = this.point.clusteredData.every(item => item.y === tY);
-
-            if (sameX && sameY) { //allsame
-              var custs = [];
-              this.point.clusteredData.forEach(function(cust) {
-                  custs.push(cust.options.name);
-              });
-              var tipText = "<b>" + custs.join(", ") + "</b>";
-              tipText += '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b>';
-              return tipText;
+            var sName = this.series.name;
+            var sData = seriesData.filter((sObj) => sObj.name === sName)[0].clusterData;
+            var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
+            retStr += 'Uplift Potential: <b>';
+            if (this.point.rawdata.upliftPotential === "N/A") {
+              retStr += 'N/A</b>';
             } else {
-              return 'Clustered points: ' + this.point.clusterPointsAmount;
+              retStr += '$' + Highcharts.numberFormat(this.point.rawdata.upliftPotential,0)+'</b>';
             }
-
-          } else {
-            return 'Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b>';
+            return retStr;
           }
-      }
   },
     plotOptions: {
         scatter: {
@@ -105,55 +94,6 @@ const App = ({ signOut, user }) => {
             },
             marker: {
                 radius: 5
-            },
-            cluster: {
-                enabled: false,
-                allowOverlap: false,
-                /*layoutAlgorithm: {
-                    type: 'kmeans',
-                    distance: '7%'
-                },
-                layoutAlgorithm: {
-                  type: 'optimalizedKmeans'
-                },*/
-                dataLabels: {
-                    style: {
-                        fontSize: '9px'
-                    },
-                    y: -1
-                },
-                marker: {
-                    lineColor: 'rgba(0, 0, 0, 0.1)'
-                },
-                /*zones: [{
-                    from: 1,
-                    to: 2,
-                    marker: {
-                        fillColor: '#AAE0EE',
-                        radius: 12
-                    }
-                }, {
-                    from: 3,
-                    to: 5,
-                    marker: {
-                        fillColor: '#65CDEF',
-                        radius: 13
-                    }
-                }, {
-                    from: 6,
-                    to: 9,
-                    marker: {
-                        fillColor: '#0DA9DD',
-                        radius: 15
-                    }
-                }, {
-                    from: 10,
-                    to: 100,
-                    marker: {
-                        fillColor: '#2583C5',
-                        radius: 18
-                    }
-                }]*/
             }
         }
     },
@@ -467,7 +407,7 @@ const App = ({ signOut, user }) => {
 // Create the data 2D-array (vectors) describing the data
 let vectors = new Array();
 for (let i = 0 ; i < customerAggregations.length ; i++) {
-  vectors[i] = [ customerAggregations[i]['sales_volume'] , customerAggregations[i]['overall_margin']];
+  vectors[i] = [ customerAggregations[i]['sales_volume'] , customerAggregations[i]['overall_margin'], customerAggregations[i]];
 }
 
 let clusterResult = kmeans(vectors, 4);
@@ -478,15 +418,39 @@ clusterResult.clusters.map((cluster) => {
   //build points data
   let pointsData = [];
 
+  var clusterTotals = {};
+  clusterTotals.totalMargin = 0;
+  clusterTotals.salesVolume = 0;
+  clusterTotals.upliftPotential = 0;
+
   cluster.points.map((pointObj) => {
-    pointsData.push({"x" : pointObj[0], "y" : pointObj[1]})
+    clusterTotals.totalMargin += pointObj[1]; 
+    clusterTotals.salesVolume += pointObj[0]; 
   })
+
+  clusterTotals.expectedMargin = parseFloat((clusterTotals.totalMargin / cluster.points.length).toFixed(2));
+  clusterTotals.actualMargin = parseFloat((clusterTotals.totalMargin - clusterTotals.expectedMargin).toFixed(2));
+  //clusterTotals.upliftPotential = parseFloat(((clusterTotals.expectedMargin - clusterTotals.actualMargin) * clusterTotals.salesVolume).toFixed(2));
+
+  cluster.points.map((pointObj) => {
+    var rData = pointObj[2];
+    rData.upliftPotential = parseFloat(((clusterTotals.expectedMargin - pointObj[1]) * pointObj[0]).toFixed(2));
+    if (rData.upliftPotential <= 0) {
+      rData.upliftPotential = "N/A";
+    } else {
+      clusterTotals.upliftPotential +=  rData.upliftPotential;
+    }
+      
+    pointsData.push({"x" : pointObj[0], "y" : pointObj[1], "rawdata" : rData});
+  })
+
 
   //set cluster
   clusterSeries.push({
     name: 'Customer Cluster ' + cNum,
     color: cPallete[cNum - 1],
-    data: pointsData
+    data: pointsData,
+    clusterData: clusterTotals
   });
 
   cNum++;
@@ -494,9 +458,7 @@ clusterResult.clusters.map((cluster) => {
 
 setSeriesData(clusterSeries);
 
-
-console.log(clusterResult);
-console.log(pData);
+console.log(clusterSeries);
 
 handleMode("cluster");
 
