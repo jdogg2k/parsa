@@ -13,7 +13,7 @@ import "./App.css";
 import ExcelReader from './ExcelReader';
 import "@aws-amplify/ui-react/styles.css";
 import { API } from "aws-amplify";
-import { Container, Row, Col, Modal, Button, Alert, Image } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Button, Alert, Image, ListGroup } from 'react-bootstrap';
 import { createCustomer, createCustomerGroup, createCustomerData, deleteCustomer, deleteCustomerGroup, deleteCustomerData } from './graphql/mutations';
 import { listCustomerGroups, customersByCustomerGroupID, customerDataByCustomerID, listCustomers, getCustomer, listCustomerData, getCustomerData } from "./graphql/queries";
 import {
@@ -26,6 +26,7 @@ import kmeans from "./kmean.js";
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import markerClusters from 'highcharts/modules/marker-clusters';
+import * as jstat from "jstat";
 
 markerClusters(Highcharts);
 
@@ -37,14 +38,18 @@ const App = ({ signOut, user }) => {
     }
   });
 
+  function percentFormatter(params) {
+    return params.value + '%';
+  }
 
+  const chartComponentRef = useRef(null);
   const [plotData, setPlotData] = useState([]);
   const [seriesData, setSeriesData] = useState([]);
   const options = {
-    chart: {
+    /*chart: {
         type: 'scatter',
         zoomType: 'xy'
-    },
+    },*/
     title: {
         text: 'Customer Metrics'
     },
@@ -66,37 +71,51 @@ const App = ({ signOut, user }) => {
         }
     },
     legend: {
-        enabled: true
+        enabled: false
     },
     tooltip: {
       formatter: function () {
-            var sName = this.series.name;
-            var sData = seriesData.filter((sObj) => sObj.name === sName)[0].clusterData;
-            var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
-            retStr += 'Uplift Potential: <b>';
-            if (this.point.rawdata.upliftPotential === "N/A") {
-              retStr += 'N/A</b>';
-            } else {
-              retStr += '$' + Highcharts.numberFormat(this.point.rawdata.upliftPotential,0)+'</b>';
+            var retStr = "Regression Line";
+
+            if (this.series.type === 'scatter') {
+              var sName = this.series.name;
+              var sData = seriesData.filter((sObj) => sObj.name === sName)[0].clusterData;
+              var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
+              retStr += 'Uplift Potential: <b>';
+              if (this.point.rawdata.upliftPotential === "N/A") {
+                retStr += 'N/A</b>';
+              } else {
+                retStr += '$' + Highcharts.numberFormat(this.point.rawdata.upliftPotential,0)+'</b>';
+              }
             }
+            
             return retStr;
           }
   },
     plotOptions: {
         scatter: {
-            dataLabels: {
-                enabled: false,
-                pointFormat: '{point.name}'
-            },
-            tooltip: {
-                headerFormat: '<b>{point.name}</b><br>',
-                pointFormat: '${point.x:,.2f}, {point.y}%'
-            },
-            marker: {
-                radius: 5
+          marker: {
+            radius: 4,
+            symbol: "circle",
+            states: {
+              hover: {
+                enabled: true,
+                lineColor: "rgb(100,100,100)"
+              }
             }
+          },
+          states: {
+            hover: {
+              marker: {
+                enabled: false
+              }
+            }
+          }
+        },
+        line: {
+          lineWidth: 2.5
         }
-    },
+      },
     series: seriesData
 };
 
@@ -106,13 +125,22 @@ const App = ({ signOut, user }) => {
   const [toastVariant, setToastVariant] = useState('success');
   const [showToast, setToastViz] = useState(false);
   const gridRef = useRef(); // Optional - for accessing Grid's API
-  const [rowData, setRowData] = useState([]); // Set rowData to Array of Objects, one Object per Row
+  const custGridRef = useRef(); // Optional - for accessing Grid's API
+  const [rowData, setRowData] = useState([]);
+  const [isolatedData, setIsolatedData] = useState([]);
   const [groupData, setGroupData] = useState([]);
   const [rawCustomerData, setRawCustomerData] = useState([]);
   const [groupModalShow, setGroupModalShow] = useState(false);
   const [appMode, setAppMode] = useState("dataload");
+  const custColDefs = [
+    {field: 'customer_name', headerName: 'Customer Name', filter: true, sort: 'asc', floatingFilter: true},
+    {field: 'expected_margin', headerName: 'Expected Margin', filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
+    {field: 'actual_margin', headerName: 'Actual Margin', filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
+    {field: 'uplift_potential', headerName: 'Unit Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, cellStyle: currencyCssFunc, floatingFilter: true}
+  ];
 
   const cPallete = ['#ff676c', '#7e82ed', '#ffae1d', '#42b79b', '#d688d1', '#000000'];
+  const lineColor = '#000000';
  
   // Each Column Definition results in one Column.
   const [columnDefs, setColumnDefs] = useState([]);
@@ -167,12 +195,9 @@ const App = ({ signOut, user }) => {
 
   function currencyCssFunc(params) {
 
-    var borderSize = "1px";
+    //var borderSize = "1px";
     return {
       "textAlign": "right",
-      "borderLeftStyle": "solid",
-      "borderLeftWidth": borderSize,
-      "borderLeftColor": "grey"
     };
   
   }
@@ -309,6 +334,30 @@ const App = ({ signOut, user }) => {
     return cData.data.customerDataByCustomerID.items;
   }
 
+  function regression(arrWeight, arrHeight) {
+    let r, sy, sx, b, a, meanX, meanY;
+    r = jstat.corrcoeff(arrHeight, arrWeight);
+    sy = jstat.stdev(arrWeight);
+    sx = jstat.stdev(arrHeight);
+    meanY = jstat(arrWeight).mean();
+    meanX = jstat(arrHeight).mean();
+    b = r * (sy / sx);
+    a = meanY - meanX * b;
+    //Set up a line
+    let y1, y2, x1, x2;
+    x1 = jstat.min(arrHeight);
+    x2 = jstat.max(arrHeight);
+    y1 = a + b * x1;
+    y2 = a + b * x2;
+    return {
+      line: [
+        [x1, y1],
+        [x2, y2]
+      ],
+      r
+    };
+  }
+
   async function doCluster(groupID) {
 
     //first get customers per group
@@ -395,72 +444,148 @@ const App = ({ signOut, user }) => {
     });*/
 
     // Data source: LinkedIn
-/*const data = [
-  {'company': 'Microsoft' , 'size': 91259, 'revenue': 60420},
-  {'company': 'IBM' , 'size': 400000, 'revenue': 98787},
-  {'company': 'Skype' , 'size': 700, 'revenue': 716},
-  {'company': 'SAP' , 'size': 48000, 'revenue': 11567},
-  {'company': 'Yahoo!' , 'size': 14000 , 'revenue': 6426 },
-  {'company': 'eBay' , 'size': 15000, 'revenue': 8700},
-];*/
- 
-// Create the data 2D-array (vectors) describing the data
-let vectors = new Array();
-for (let i = 0 ; i < customerAggregations.length ; i++) {
-  vectors[i] = [ customerAggregations[i]['sales_volume'] , customerAggregations[i]['overall_margin'], customerAggregations[i]];
-}
+  /*const data = [
+    {'company': 'Microsoft' , 'size': 91259, 'revenue': 60420},
+    {'company': 'IBM' , 'size': 400000, 'revenue': 98787},
+    {'company': 'Skype' , 'size': 700, 'revenue': 716},
+    {'company': 'SAP' , 'size': 48000, 'revenue': 11567},
+    {'company': 'Yahoo!' , 'size': 14000 , 'revenue': 6426 },
+    {'company': 'eBay' , 'size': 15000, 'revenue': 8700},
+  ];*/
+  
+  // Create the data 2D-array (vectors) describing the data
+  let vectors = new Array();
+  for (let i = 0 ; i < customerAggregations.length ; i++) {
+    vectors[i] = [ customerAggregations[i]['sales_volume'] , customerAggregations[i]['overall_margin'], customerAggregations[i]];
+  }
 
-let clusterResult = kmeans(vectors, 4);
-let clusterSeries = [];
-let cNum = 1;
+  let clusterResult = kmeans(vectors, 4);
+  let clusterSeries = [];
+  let cNum = 1;
 
-clusterResult.clusters.map((cluster) => {
-  //build points data
-  let pointsData = [];
+  clusterResult.clusters.map((cluster) => {
+    //build points data
+    let pointsData = [];
 
-  var clusterTotals = {};
-  clusterTotals.totalMargin = 0;
-  clusterTotals.salesVolume = 0;
-  clusterTotals.upliftPotential = 0;
+    var clusterTotals = {};
+    clusterTotals.totalMargin = 0;
+    clusterTotals.salesVolume = 0;
+    clusterTotals.upliftPotential = 0;
 
-  cluster.points.map((pointObj) => {
-    clusterTotals.totalMargin += pointObj[1]; 
-    clusterTotals.salesVolume += pointObj[0]; 
+    cluster.points.map((pointObj) => {
+      clusterTotals.totalMargin += pointObj[1]; 
+      clusterTotals.salesVolume += pointObj[0]; 
+    })
+
+    clusterTotals.expectedMargin = parseFloat((clusterTotals.totalMargin / cluster.points.length).toFixed(2));
+    clusterTotals.actualMargin = parseFloat((clusterTotals.totalMargin - clusterTotals.expectedMargin).toFixed(2));
+    //clusterTotals.upliftPotential = parseFloat(((clusterTotals.expectedMargin - clusterTotals.actualMargin) * clusterTotals.salesVolume).toFixed(2));
+
+    cluster.points.map((pointObj) => {
+      var rData = pointObj[2];
+      rData.upliftPotential = parseFloat(((clusterTotals.expectedMargin - pointObj[1]) * pointObj[0]).toFixed(2));
+      if (rData.upliftPotential <= 0) {
+        rData.upliftPotential = "N/A";
+      } else {
+        clusterTotals.upliftPotential +=  rData.upliftPotential;
+      }
+        
+      pointsData.push({"x" : pointObj[0], "y" : pointObj[1], "rawdata" : rData});
+    })
+
+
+    //set cluster
+    clusterSeries.push({
+      type: 'scatter',
+      name: 'Customer Cluster ' + cNum,
+      color: cPallete[cNum - 1],
+      data: pointsData,
+      clusterData: clusterTotals
+    });
+
+    //add regression
+    let tempX = [],
+    tempY = [];
+
+    pointsData.forEach((elm) => {
+
+      tempX.push(elm.x);
+      tempY.push(elm.y);
+
+    });
+
+    let { line, r } = regression(tempY, tempX);
+
+    clusterSeries.push({
+      type: 'line',
+      name: 'Linear regression ' + cNum,
+      color: lineColor,
+      r: r,
+      data: line,
+      visible: false
+    });
+
+    cNum++;
   })
 
-  clusterTotals.expectedMargin = parseFloat((clusterTotals.totalMargin / cluster.points.length).toFixed(2));
-  clusterTotals.actualMargin = parseFloat((clusterTotals.totalMargin - clusterTotals.expectedMargin).toFixed(2));
-  //clusterTotals.upliftPotential = parseFloat(((clusterTotals.expectedMargin - clusterTotals.actualMargin) * clusterTotals.salesVolume).toFixed(2));
 
-  cluster.points.map((pointObj) => {
-    var rData = pointObj[2];
-    rData.upliftPotential = parseFloat(((clusterTotals.expectedMargin - pointObj[1]) * pointObj[0]).toFixed(2));
-    if (rData.upliftPotential <= 0) {
-      rData.upliftPotential = "N/A";
-    } else {
-      clusterTotals.upliftPotential +=  rData.upliftPotential;
+  setSeriesData(clusterSeries);
+
+  handleMode("cluster");
+
+  chartComponentRef.current.chart.series.forEach(function(tSeries) {
+    if (tSeries.type === 'line') {
+      tSeries.hide();
     }
-      
-    pointsData.push({"x" : pointObj[0], "y" : pointObj[1], "rawdata" : rData});
-  })
-
-
-  //set cluster
-  clusterSeries.push({
-    name: 'Customer Cluster ' + cNum,
-    color: cPallete[cNum - 1],
-    data: pointsData,
-    clusterData: clusterTotals
   });
 
-  cNum++;
-})
+}
 
-setSeriesData(clusterSeries);
+  function isolateSeries(sNum) {
 
-console.log(clusterSeries);
+    var isoData = [];
 
-handleMode("cluster");
+    if (sNum !== undefined) {
+
+      var sCluster = seriesData.filter(function(v){
+        return v.name.endsWith(sNum) && v.type === 'scatter';
+      })[0];
+  
+      sCluster.data.forEach(function(dObj) {
+        var cData = {};
+        cData.customer_name = dObj.rawdata.name;
+        cData.expected_margin = sCluster.clusterData.expectedMargin;
+        cData.actual_margin = parseFloat((dObj.rawdata.overall_margin - sCluster.clusterData.expectedMargin).toFixed(2));
+        cData.uplift_potential = dObj.rawdata.upliftPotential;
+        isoData.push(cData);
+      });
+
+    }
+
+    setIsolatedData(isoData);
+
+    var newSeries = [];
+
+    seriesData.forEach(function(sData) {
+
+      if (sNum == null && sData.type === 'scatter') {
+        sData.visible = true;
+      } else {
+        
+        if (sData.name.endsWith(sNum)) {
+          sData.visible = true;
+        } else {
+          sData.visible = false;
+        }
+
+      }
+
+      newSeries.push(sData);
+
+    });
+
+    setSeriesData(newSeries);
+
 
   }
 
@@ -563,6 +688,10 @@ handleMode("cluster");
     gridRef.current.api.sizeColumnsToFit();
   }, []);
 
+  const onFirstCustDataRendered = useCallback((params) => {
+    custGridRef.current.api.sizeColumnsToFit();
+  }, []);
+
   const handleMode = (tMode) =>{
     if (tMode === "groups") {
       //get groups
@@ -616,10 +745,7 @@ handleMode("cluster");
 }
 
   useEffect(() => {
-    //fetch('https://www.ag-grid.com/example-assets/row-data.json')
-    //.then(result => result.json())
-    //.then(rowData => setRowData(rowData))
-    //fetchNotes();
+    const chart = chartComponentRef.current.chart;
   }, []);
 
   /*async function fetchNotes() {
@@ -650,14 +776,62 @@ handleMode("cluster");
       query: deleteNoteMutation,
       variables: { input: { id } },
     });
-  }*/
+  }
+  
+  <Button onClick={() => isolateSeries(series.name)} className="btn-danger deleteBtn" size="sm">Isolate</Button>
+  
+  */
 
   return (
     <View className="App">
       <Toaster show={showToast} message={toastMessage} variant={toastVariant} hideToast={hideToast}/>
       <ParsaNav username={user.username} handleSignOut={signOut} modeChange={handleMode} />
       <Container className={appMode === 'cluster' ? '' : 'd-none'}>
-        <HighchartsReact highcharts={Highcharts} options={options} />
+        <Row>
+          <Col sm={9}><HighchartsReact ref={chartComponentRef} highcharts={Highcharts} options={options} oneToOne={true}/></Col>
+          <Col sm={3}>
+            <ListGroup>
+            <ListGroup.Item className="justify-content-between align-items-center" >
+
+            <Button onClick={() => isolateSeries()} className="btn-info deleteBtn" size="sm">Show All Clusters</Button>
+            </ListGroup.Item>
+              {seriesData.map(series => {
+
+                if (series.type === "scatter") {
+                  const listColor = {
+                    backgroundColor: series.color
+                  }
+                  const expectedMargin = currency(series.clusterData.expectedMargin, { separator: ',', symbol: '' }).format();
+                  const upliftPotential = currency(series.clusterData.upliftPotential, { separator: ',', symbol: '' }).format();
+                  return(
+                    <ListGroup.Item key={series.name} className="d-flex justify-content-between align-items-center" style={listColor}>
+
+                    <div className="ms-2 me-auto chartControls">
+                      <div className="fw-bold">{series.name}</div>
+                      <div>Expected Margin: {expectedMargin}%</div>
+                      <div>Uplift Potential: ${upliftPotential}</div>
+                    </div>
+                    <Button onClick={() => isolateSeries(series.name.charAt(series.name.length-1))} className="btn-danger deleteBtn" size="sm">Isolate</Button>
+                    </ListGroup.Item>
+                  )
+                }
+              })}
+              
+            </ListGroup>
+          </Col>
+        </Row>
+        <Row>
+          <Col>{ isolatedData.length > 0 ? <div className="ag-theme-alpine" style={{width: "100%", height: 300}}>
+        <AgGridReact
+            ref={custGridRef} // Ref for accessing Grid's API
+            rowData={isolatedData} // Row Data for Rows
+            onFirstDataRendered={onFirstCustDataRendered}
+            columnDefs={custColDefs} // Column Defs for Columns
+            defaultColDef={defaultColDef} // Default Column Properties
+            animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+            />
+      </div> : null }</Col>
+        </Row>
       </Container>
       <Container className={appMode === 'groups' ? '' : 'd-none'}>
         <Row style={{marginTop: "10px"}}>
