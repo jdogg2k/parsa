@@ -80,7 +80,7 @@ const App = ({ signOut, user }) => {
             if (this.series.type === 'scatter') {
               var sName = this.series.name;
               var sData = seriesData.filter((sObj) => sObj.name === sName)[0].clusterData;
-              var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,1) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
+              var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,2) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
               retStr += 'Uplift Potential: <b>';
               if (this.point.rawdata.upliftPotential === "N/A") {
                 retStr += 'N/A</b>';
@@ -136,7 +136,7 @@ const App = ({ signOut, user }) => {
     {field: 'customer_name', headerName: 'Customer Name', filter: true, sort: 'asc', floatingFilter: true},
     {field: 'expected_margin', headerName: 'Expected Margin', filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
     {field: 'actual_margin', headerName: 'Actual Margin', filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
-    {field: 'uplift_potential', headerName: 'Unit Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, cellStyle: currencyCssFunc, floatingFilter: true}
+    {field: 'uplift_potential', headerName: 'Uplift Potential', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, cellStyle: currencyCssFunc, floatingFilter: true}
   ];
 
   const cPallete = ['#ff676c', '#7e82ed', '#ffae1d', '#42b79b', '#d688d1', '#000000'];
