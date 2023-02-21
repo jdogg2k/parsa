@@ -80,7 +80,7 @@ const App = ({ signOut, user }) => {
             if (this.series.type === 'scatter') {
               var sName = this.series.name;
               var sData = seriesData.filter((sObj) => sObj.name === sName)[0].clusterData;
-              var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Overall Margin: <b>' + Highcharts.numberFormat(this.point.y,2) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
+              var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Actual Margin: <b>' + Highcharts.numberFormat(this.point.y,2) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
               retStr += 'Uplift Potential: <b>';
               if (this.point.rawdata.upliftPotential === "N/A") {
                 retStr += 'N/A</b>';
@@ -555,11 +555,16 @@ const App = ({ signOut, user }) => {
         var cData = {};
         cData.customer_name = dObj.rawdata.name;
         cData.expected_margin = sCluster.clusterData.expectedMargin;
-        cData.actual_margin = parseFloat((dObj.rawdata.overall_margin - sCluster.clusterData.expectedMargin).toFixed(2));
+        cData.actual_margin = dObj.rawdata.overall_margin;
         cData.uplift_potential = dObj.rawdata.upliftPotential;
         isoData.push(cData);
       });
 
+    } else { //clear all highcharts point selections
+      var points = chartComponentRef.current.chart.getSelectedPoints();
+      points.forEach(function (p){
+        p.select(false);
+      })
     }
 
     setIsolatedData(isoData);
@@ -682,6 +687,32 @@ const App = ({ signOut, user }) => {
         checkbox: true
       }
     };
+  }, []);
+
+  const onCustomerSelectionChanged = useCallback((params) => {
+    const selectedRows = custGridRef.current.api.getSelectedRows();
+    var tName = selectedRows[0].customer_name;
+
+    var sIndex = 0;
+    var dIndex = 0;
+
+    chartComponentRef.current.chart.series.forEach(function(tSeries) {
+
+      if (tSeries.visible && tSeries.name.indexOf("Cluster") > -1) {
+
+        sIndex = tSeries.index;
+        tSeries.data.forEach(function(dObj) {
+          if (dObj.rawdata.name === tName)
+            dIndex = dObj.index;
+        });
+
+        chartComponentRef.current.chart.series[sIndex].data[dIndex].select(true, false);
+        chartComponentRef.current.chart.tooltip.refresh(chartComponentRef.current.chart.series[sIndex].data[dIndex]);
+
+      }
+
+    });
+
   }, []);
 
   const onFirstDataRendered = useCallback((params) => {
@@ -829,6 +860,8 @@ const App = ({ signOut, user }) => {
             columnDefs={custColDefs} // Column Defs for Columns
             defaultColDef={defaultColDef} // Default Column Properties
             animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+            rowSelection='single'
+            onSelectionChanged={onCustomerSelectionChanged}
             />
       </div> : null }</Col>
         </Row>
