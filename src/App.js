@@ -85,7 +85,7 @@ const App = ({ signOut, user }) => {
               if (this.point.rawdata.upliftPotential === "N/A") {
                 retStr += 'N/A</b>';
               } else {
-                retStr += '$' + Highcharts.numberFormat(this.point.rawdata.upliftPotential,0)+'</b>';
+                retStr += '$' + Highcharts.numberFormat(this.point.rawdata.upliftPotential,2)+'</b>';
               }
             }
             
@@ -483,7 +483,7 @@ const App = ({ signOut, user }) => {
 
     cluster.points.map((pointObj) => {
       var rData = pointObj[2];
-      rData.upliftPotential = parseFloat(((clusterTotals.expectedMargin - pointObj[1]) * pointObj[0]).toFixed(2));
+      rData.upliftPotential = parseFloat((((clusterTotals.expectedMargin - pointObj[1]) / 100) * pointObj[0]).toFixed(2));
       if (rData.upliftPotential <= 0) {
         rData.upliftPotential = "N/A";
       } else {
