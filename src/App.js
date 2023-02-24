@@ -27,6 +27,7 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import markerClusters from 'highcharts/modules/marker-clusters';
 import * as jstat from "jstat";
+import LimitUpliftModal from "./modals/LimitUpliftModal";
 
 markerClusters(Highcharts);
 
@@ -119,8 +120,10 @@ const App = ({ signOut, user }) => {
     series: seriesData
 };
 
-
+  const [upliftLimit, setUpliftLimit] = useState(0);
+  const [selectedCluster, setSelectedCluster] = useState(0);
   const [groupModalOpen, openGroupModal] = useState(false);
+  const [upliftModalOpen, openUpliftModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState('success');
   const [showToast, setToastViz] = useState(false);
@@ -132,11 +135,14 @@ const App = ({ signOut, user }) => {
   const [rawCustomerData, setRawCustomerData] = useState([]);
   const [groupModalShow, setGroupModalShow] = useState(false);
   const [appMode, setAppMode] = useState("dataload");
+  const [marginChangeHeader, setMarginChangeHeader] = useState('Margin Change');
+  const [upliftPotentialHeader, setUpliftPotentialHeader] = useState('Uplift Potential');
   const custColDefs = [
     {field: 'customer_name', headerName: 'Customer Name', filter: true, sort: 'asc', floatingFilter: true},
     {field: 'expected_margin', headerName: 'Expected Margin', filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
     {field: 'actual_margin', headerName: 'Actual Margin', filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
-    {field: 'uplift_potential', headerName: 'Uplift Potential', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, cellStyle: currencyCssFunc, floatingFilter: true}
+    {field: 'margin_change', headerName: marginChangeHeader, filter: 'agNumberColumnFilter', floatingFilter: true, valueFormatter: percentFormatter},
+    {field: 'uplift_potential', headerName: upliftPotentialHeader, filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, cellStyle: currencyCssFunc, floatingFilter: true}
   ];
 
   const cPallete = ['#ff676c', '#7e82ed', '#ffae1d', '#42b79b', '#d688d1', '#000000'];
@@ -214,6 +220,28 @@ const App = ({ signOut, user }) => {
 
   function closeGroupModal() {
     openGroupModal(false);
+  }
+
+  function closeUpliftModal() {
+    openUpliftModal(false);
+  }
+
+  function saveUpliftData(upliftData) {
+    let newUplift = parseFloat(upliftData.uplift);
+    setUpliftLimit(newUplift);
+
+    let headerSuffix = "";
+    if (newUplift > 0)
+      headerSuffix = " (Limited)";
+      
+    setMarginChangeHeader("Margin Change" + headerSuffix);
+    setUpliftPotentialHeader("Uplift Potential" + headerSuffix);
+
+    closeUpliftModal();
+
+    if (selectedCluster !== 0)
+      isolateSeries(selectedCluster, newUplift);
+
   }
 
   function parseAWSDate(userDate) {
@@ -541,30 +569,66 @@ const App = ({ signOut, user }) => {
 
 }
 
-  function isolateSeries(sNum) {
+  function isolateSeries(sNum, uLimit) {
 
     var isoData = [];
 
-    if (sNum !== undefined) {
+    if (sNum !== null) {
+
+      setSelectedCluster(sNum);
 
       var sCluster = seriesData.filter(function(v){
         return v.name.endsWith(sNum) && v.type === 'scatter';
       })[0];
+
+      sCluster.color = cPallete[sNum - 1];
+
+      seriesData.forEach(function(v){
+        if (v.type === 'scatter'){
+          if (!v.name.endsWith(sNum))
+            v.color = "#bbbbbb";
+        }
+      });
   
       sCluster.data.forEach(function(dObj) {
         var cData = {};
         cData.customer_name = dObj.rawdata.name;
         cData.expected_margin = sCluster.clusterData.expectedMargin;
         cData.actual_margin = dObj.rawdata.overall_margin;
-        cData.uplift_potential = dObj.rawdata.upliftPotential;
+
+        //calculate Margin Change
+        var mChange = parseFloat((cData.expected_margin - cData.actual_margin).toFixed(2));
+        if (mChange < 0)
+          mChange = 0;
+
+        var uPotent = dObj.rawdata.upliftPotential;
+
+        if (uLimit > 0) { //recalculate uplift potential based on limit
+          if (mChange > uLimit) {
+            mChange = uLimit;
+            uPotent = parseFloat((mChange / 100).toFixed(2)) * dObj.rawdata.sales_volume;
+          }
+        }  
+
+        cData.margin_change = mChange;
+        cData.uplift_potential = uPotent;
         isoData.push(cData);
       });
 
     } else { //clear all highcharts point selections
+
+      setSelectedCluster(0);
+
       var points = chartComponentRef.current.chart.getSelectedPoints();
       points.forEach(function (p){
         p.select(false);
-      })
+      });
+
+      seriesData.forEach(function(v){
+        if (v.type === 'scatter'){
+          v.color = cPallete[parseInt((v.name.slice(-1))) - 1];
+        }
+      });
     }
 
     setIsolatedData(isoData);
@@ -824,7 +888,8 @@ const App = ({ signOut, user }) => {
             <ListGroup>
             <ListGroup.Item className="justify-content-between align-items-center" >
 
-            <Button onClick={() => isolateSeries()} className="btn-info deleteBtn" size="sm">Show All Clusters</Button>
+            <Button onClick={() => isolateSeries(null, upliftLimit)} className="btn-info deleteBtn" size="sm">Show All Clusters</Button>
+            <Button onClick={() => openUpliftModal(true)} className="btn-default deleteBtn" size="sm">Limit Uplift</Button>
             </ListGroup.Item>
               {seriesData.map(series => {
 
@@ -842,7 +907,7 @@ const App = ({ signOut, user }) => {
                       <div>Expected Margin: {expectedMargin}%</div>
                       <div>Uplift Potential: ${upliftPotential}</div>
                     </div>
-                    <Button onClick={() => isolateSeries(series.name.charAt(series.name.length-1))} className="btn-danger deleteBtn" size="sm">Isolate</Button>
+                    <Button onClick={() => isolateSeries(series.name.charAt(series.name.length-1), upliftLimit)} className="btn-danger deleteBtn" size="sm">Isolate</Button>
                     </ListGroup.Item>
                   )
                 }
@@ -916,6 +981,11 @@ const App = ({ signOut, user }) => {
             isOpen={groupModalOpen} 
             handleSubmit={saveGroupData}
             closeModal={closeGroupModal}
+          /> 
+      <LimitUpliftModal
+            isOpen={upliftModalOpen} 
+            handleSubmit={saveUpliftData}
+            closeModal={closeUpliftModal}
           /> 
     </View>
   );

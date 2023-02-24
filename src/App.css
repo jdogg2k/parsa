@@ -75,3 +75,7 @@
 .chartControls {
   font-size: 12px;
 }
+
+.inactiveCluster {
+  background-color: #bbbbbb;
+}
