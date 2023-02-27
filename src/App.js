@@ -795,20 +795,33 @@ const App = ({ signOut, user }) => {
     setAppMode(tMode);
   }
 
+  function dateFormatter(params) {
+    var dVal = "";
+    if (params.data) {
+
+      var dDate = params.data.transaction_date.getUTCDate();
+      var dMonth = params.data.transaction_date.getMonth() + 1;
+      // concatenate new values into one string
+      dVal = dMonth + "/" + dDate + "/" + params.data.transaction_date.getFullYear();
+      
+    }
+    return dVal;
+  }
+
   const handleData = (xData) =>{
 
     setColumnDefs([
-      {field: 'customer_name', headerName: 'Customer Name', filter: true, rowGroup: true, sort: 'asc', floatingFilter: true, hide: true},
-      {field: 'product_name', headerName: 'Product Name', filter: true, floatingFilter: true},
-      {field: 'transaction_date', headerName: 'Transaction Date', filter: 'agDateColumnFilter', filterParams: filterParams, floatingFilter: true},
-      {field: 'distribution_type', headerName: 'Distribution Type', filter: true, floatingFilter: true},
-      {field: 'cost_of_goods_sold', headerName: 'Cost of Goods Sold', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true},
-      {field: 'unit_revenue', headerName: 'Unit Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true},
-      {field: 'quantity', headerName: 'Quantity', filter: 'agNumberColumnFilter', aggFunc: 'sum', floatingFilter: true},
-      {field: 'services_purchased', headerName: 'Services Purchased', filter: true, floatingFilter: true},
-      {field: 'service_revenue', headerName: 'Service Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true},
-      {field: 'cost_of_services', headerName: 'Cost of Services', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true},
-      {field: 'service_type', headerName: 'Service Type', filter: true, floatingFilter: true}
+      {field: 'customer_name', headerName: 'Customer Name', filter: true, rowGroup: true, sort: 'asc', floatingFilter: true, hide: true, resizable: true},
+      {field: 'product_name', headerName: 'Product Name', filter: true, floatingFilter: true, resizable: true},
+      {field: 'transaction_date', headerName: 'Transaction Date', filter: 'agDateColumnFilter', filterParams: filterParams, floatingFilter: true, resizable: true, valueFormatter: dateFormatter},
+      {field: 'distribution_type', headerName: 'Distribution Type', filter: true, floatingFilter: true, resizable: true},
+      {field: 'cost_of_goods_sold', headerName: 'Cost of Goods Sold', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true, resizable: true},
+      {field: 'unit_revenue', headerName: 'Unit Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true, resizable: true},
+      {field: 'quantity', headerName: 'Quantity', filter: 'agNumberColumnFilter', aggFunc: 'sum', floatingFilter: true, resizable: true},
+      {field: 'services_purchased', headerName: 'Services Purchased', filter: true, floatingFilter: true, resizable: true},
+      {field: 'service_revenue', headerName: 'Service Revenue', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true, resizable: true},
+      {field: 'cost_of_services', headerName: 'Cost of Services', filter: 'agNumberColumnFilter', valueFormatter: currencyFormatter, aggFunc: 'sum', cellStyle: currencyCssFunc, floatingFilter: true, resizable: true},
+      {field: 'service_type', headerName: 'Service Type', filter: true, floatingFilter: true, resizable: true}
     ]);
 
     const searchRegExp = /\s/g;
@@ -818,7 +831,8 @@ const App = ({ signOut, user }) => {
       const item = xData[i];
       const rowObj = {};
       Object.keys(item).map(function(key) {
-        var newKey = key.toLowerCase().replace(" ($)", "").replace(searchRegExp, replaceWith);
+        
+        var newKey = key.toLowerCase().trim().replace(" ($)", "").replace(searchRegExp, replaceWith);
         var rawData = item[key];
         var newData = rawData;
 
@@ -828,6 +842,15 @@ const App = ({ signOut, user }) => {
 
         if (newKey.indexOf("quantity") > -1) { //numerical conversion
           newData = parseInt(rawData);
+        }
+
+        if (newKey == 'transaction_date'){
+          if (rawData.toString().indexOf("/") == -1) {
+            var modDate = new Date(Date.UTC(0, 0, rawData - 1));
+            newData = modDate;
+          } else {
+            newData = new Date(rawData);
+          }
         }
 
         rowObj[newKey] = newData;
