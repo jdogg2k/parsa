@@ -803,7 +803,7 @@ const App = ({ signOut, user }) => {
       var dMonth = params.data.transaction_date.getMonth() + 1;
       // concatenate new values into one string
       dVal = dMonth + "/" + dDate + "/" + params.data.transaction_date.getFullYear();
-      
+
     }
     return dVal;
   }
@@ -844,7 +844,7 @@ const App = ({ signOut, user }) => {
           newData = parseInt(rawData);
         }
 
-        if (newKey == 'transaction_date'){
+        if (newKey == 'transaction_date'){ //date conversion
           if (rawData.toString().indexOf("/") == -1) {
             var modDate = new Date(Date.UTC(0, 0, rawData - 1));
             newData = modDate;
