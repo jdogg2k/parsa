@@ -844,7 +844,7 @@ const App = ({ signOut, user }) => {
           newData = parseInt(rawData);
         }
 
-        if (newKey == 'transaction_date'){ //date conversion
+        if (newKey == 'transaction_date'){ //trans date conversion
           if (rawData.toString().indexOf("/") == -1) {
             var modDate = new Date(Date.UTC(0, 0, rawData - 1));
             newData = modDate;
