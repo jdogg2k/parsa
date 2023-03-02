@@ -791,7 +791,7 @@ const App = ({ signOut, user }) => {
 
   const handleMode = (tMode) =>{
     if (tMode === "groups") {
-      //get groups
+      //get customer groups
       getCustomerGroups();
     }
     setAppMode(tMode);
