@@ -411,6 +411,7 @@ const App = ({ signOut, user }) => {
       sumCounts.quantity = 0;
       sumCounts.costOfGoodsSold = 0;
       sumCounts.costOfServices = 0;
+      sumCounts.salesVolume = 0;
 
       var newCust = {};
       newCust.id = cObj.id;
@@ -423,10 +424,11 @@ const App = ({ signOut, user }) => {
         sumCounts.quantity += tData.quantity;
         sumCounts.costOfGoodsSold += tData.cost_of_goods_sold;
         sumCounts.costOfServices += tData.cost_of_services;
+        sumCounts.salesVolume += (tData.unit_revenue * tData.quantity) + tData.service_revenue;
       });
 
       //set calculations
-      newCust.sales_volume = (sumCounts.unitRevenue * sumCounts.quantity) + sumCounts.serviceRevenue;
+      newCust.sales_volume = sumCounts.salesVolume;
       newCust.total_cost = (sumCounts.costOfGoodsSold * sumCounts.quantity) + sumCounts.costOfServices;
       newCust.product_margin = ((((sumCounts.unitRevenue - sumCounts.costOfGoodsSold) * sumCounts.quantity) / (sumCounts.costOfGoodsSold * sumCounts.quantity)) * 100).toFixed(2);
       if (sumCounts.serviceRevenue === 0 && sumCounts.costOfServices === 0) {
