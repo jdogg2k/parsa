@@ -277,7 +277,13 @@ const App = ({ signOut, user }) => {
     // List all items
     const allCustomerGroups = await API.graphql({
       query: listCustomerGroups,
-      variables: { userID: user.username}
+      variables: {
+        filter: {
+          userID: {
+            eq: user.username
+          }
+        }
+      }
     });
     setGroupData(allCustomerGroups.data.listCustomerGroups.items);
   }
