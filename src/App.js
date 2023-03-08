@@ -79,6 +79,7 @@ const App = ({ signOut, user }) => {
             var retStr = "Regression Line";
 
             if (this.series.type === 'scatter') {
+              console.log(upliftLimit);
               var sName = this.series.name;
               var sData = seriesData.filter((sObj) => sObj.name === sName)[0].clusterData;
               var retStr = '<b>' + sName + '</b><br/>Expected Margin: <b>' + Highcharts.numberFormat(sData.expectedMargin,2) + '%</b><br/>Uplift Potential <b>$' + Highcharts.numberFormat(sData.upliftPotential,2) + '</b><br/><br/>Customer: ' + this.point.rawdata.name + '<br/>Actual Margin: <b>' + Highcharts.numberFormat(this.point.y,2) + '%</b><br/>' + 'Sales Volume: <b>$'+Highcharts.numberFormat(this.point.x,0)+'</b><br/>';
@@ -86,7 +87,12 @@ const App = ({ signOut, user }) => {
               if (this.point.rawdata.upliftPotential === "N/A") {
                 retStr += 'N/A</b>';
               } else {
-                retStr += '$' + Highcharts.numberFormat(this.point.rawdata.upliftPotential,2)+'</b>';
+                var uP = Highcharts.numberFormat(this.point.rawdata.upliftPotential,2);
+                //check for limit change
+                if (upliftLimit > 0) {
+                  uP = Highcharts.numberFormat(parseFloat((upliftLimit / 100).toFixed(2)) * this.point.x,2);
+                }
+                retStr += '$' + uP +'</b>';
               }
             }
             
