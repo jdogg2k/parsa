@@ -251,22 +251,23 @@ const App = ({ signOut, user }) => {
   }
 
   function parseAWSDate(userDate) {
-      // split date string at '/' 
-      var dateArr = userDate.split('/');
+      
+      var day = userDate.getUTCDate().toString();
+      var month = (userDate.getUTCMonth() + 1).toString();
     
       // check for single number
-      if(dateArr[0].length === 1){
-        dateArr[0] = '0' + dateArr[0];
+      if(day.length === 1){
+        day = '0' + day;
       }
-      if (dateArr[1].length === 1){
-        dateArr[1] = '0' + dateArr[1];
+      if (month.length === 1){
+        month = '0' + month;
       } 
       
       // concatenate new values into one string
-      userDate = dateArr[2] + "-" + dateArr[0] + "-" + dateArr[1] + "Z";
+      var retDate = userDate.getUTCFullYear() + "-" + month + "-" + day + "Z";
       
       // return value
-      return userDate;
+      return retDate;
     }
     
   function createNewGroup() {
