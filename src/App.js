@@ -976,17 +976,15 @@ const App = ({ signOut, user }) => {
       </Container>
        <Container className={appMode === 'dataload' ? '' : 'd-none'}>
        <div className={rowData.length == 0 ? '' : 'd-none'}>
-      <h1 className="signikaText topIntro">Welcome to Parsa</h1>
-      <h6 className="signikaText text-muted pb-3">Import customer data and visualize meaningful patterns.</h6>
-      <div className="signikaText">
-        Load Data below or view your previously imported <Button onClick={() => handleMode('groups')} className="btn btn-opacity-light mr-1">Customer Groups</Button>
-       
+          <h1 className="signikaText topIntro">Welcome to Parsa</h1>
+          <h6 className="signikaText text-muted pb-3">Import customer data and visualize meaningful patterns.</h6>
+          <div className="signikaText">Please begin by loading your spreadsheet data file below... (csv, xls, xlsx)</div>
+          <Row style={{marginTop: "10px"}}>
+            <Col><ExcelReader excelData={handleData} /></Col>
+          </Row>
+          <Image src="/Group171.svg" alt="" className="img-fluid parseIntro" />
       </div>
-      <Image src="/Group171.svg" alt="" className="img-fluid parseIntro" />
-    </div>
-        <Row style={{marginTop: "10px"}}>
-          <Col><ExcelReader excelData={handleData} /></Col>
-        </Row>
+        
         <Row>
           <Col>
           { rowData.length > 0 ? <div className="ag-theme-alpine" style={{width: "100%", height: 500}}>

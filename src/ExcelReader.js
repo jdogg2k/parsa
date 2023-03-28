@@ -90,9 +90,6 @@ class ExcelReader extends Component {
             </InputGroup>
             </Col>
           </Row>
-          <Row>
-            <Col><a href="./Sample-Sales.xlsx">Download Sample XLSX File</a></Col>
-          </Row>
         </Container>        
       </div>
       
