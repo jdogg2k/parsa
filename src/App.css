@@ -79,3 +79,18 @@
 .inactiveCluster {
   background-color: #bbbbbb;
 }
+
+.multiCheck {
+  margin-right: 12px;
+  margin-bottom: 11px;
+  margin-top: 5px;
+  float: left;
+}
+
+.multiCheckLabel {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    margin-top: 5px;
+}

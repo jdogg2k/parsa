@@ -28,6 +28,7 @@ import HighchartsReact from 'highcharts-react-official';
 import markerClusters from 'highcharts/modules/marker-clusters';
 import * as jstat from "jstat";
 import LimitUpliftModal from "./modals/LimitUpliftModal";
+import IngestProcess from "./IngestProcess";
 
 markerClusters(Highcharts);
 
@@ -130,6 +131,8 @@ const App = ({ signOut, user }) => {
   const [selectedCluster, setSelectedCluster] = useState(0);
   const [groupModalOpen, openGroupModal] = useState(false);
   const [upliftModalOpen, openUpliftModal] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [fieldInformation, setFieldInformation] = useState({});
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState('success');
   const [showToast, setToastViz] = useState(false);
@@ -823,6 +826,14 @@ const App = ({ signOut, user }) => {
     return dVal;
   }
 
+  const setLoading = (loadVal) => {
+    setDataLoading(loadVal);
+  };
+
+  const setFieldInfo = (fieldInput) => {
+    setFieldInformation(fieldInput);
+  };
+
   const handleData = (xData) =>{
 
     setColumnDefs([
@@ -975,19 +986,37 @@ const App = ({ signOut, user }) => {
         </Row>
       </Container>
        <Container className={appMode === 'dataload' ? '' : 'd-none'}>
-       <div className={rowData.length == 0 ? '' : 'd-none'}>
+       <div>
           <h1 className="signikaText topIntro">Welcome to Parsa</h1>
           <h6 className="signikaText text-muted pb-3">Import customer data and visualize meaningful patterns.</h6>
-          <div className="signikaText">Please begin by loading your spreadsheet data file below... (csv, xls, xlsx)</div>
-          <Row style={{marginTop: "10px"}}>
-            <Col><ExcelReader excelData={handleData} /></Col>
-          </Row>
-          <Image src="/Group171.svg" alt="" className="img-fluid parseIntro" />
+
+          <div className={rowData.length == 0 ? 'signikaText' : 'd-none'}>Please begin by loading your spreadsheet data file below... (csv, xls, xlsx)
+            <Row style={{marginTop: "10px"}}>
+              <Col><ExcelReader excelData={handleData} loading={setLoading} fieldInfo={setFieldInfo} /></Col>
+            </Row>
+          </div>
+          
+          <div className={dataLoading ? 'img-fluid' : 'd-none'}>
+            <Row style={{textAlign: "center"}}>
+              <Col>Loading and Analyzing Data</Col>
+            </Row>
+            <Row>
+              <Col><Image src="/132349-business-woman.gif" alt="" /></Col>
+            </Row>
+          </div>
+          
+          <Image src="/Group171.svg" alt="" className={rowData.length == 0 && !dataLoading ? 'img-fluid parseIntro' : 'd-none'} />
+      </div>
+
+      <div className={rowData.length > 0 ? '' : 'd-none'}>
+        <Row style={{marginTop: "10px"}}>
+          <Col><IngestProcess fieldInfo={fieldInformation} /></Col>
+        </Row>
       </div>
         
         <Row>
           <Col>
-          { rowData.length > 0 ? <div className="ag-theme-alpine" style={{width: "100%", height: 500}}>
+          { rowData.length === 255 ? <div className="ag-theme-alpine" style={{width: "100%", height: 500}}>
         <Alert key='warning' variant='warning'>
           Select grouped customer rows of customers you want to add to a Customer Group
         </Alert>
