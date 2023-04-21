@@ -991,6 +991,9 @@ const App = ({ signOut, user }) => {
           <h6 className="signikaText text-muted pb-3">Import customer data and visualize meaningful patterns.</h6>
 
           <div className={rowData.length == 0 ? 'signikaText' : 'd-none'}>Please begin by loading your spreadsheet data file below... (csv, xls, xlsx)
+            <Alert variant='warning' style={{marginTop: "10px"}}>
+              *Your data file MUST contain column headers to parse properly*
+            </Alert>
             <Row style={{marginTop: "10px"}}>
               <Col><ExcelReader excelData={handleData} loading={setLoading} fieldInfo={setFieldInfo} /></Col>
             </Row>
