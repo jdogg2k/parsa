@@ -102,7 +102,7 @@ class ExcelReader extends Component {
         fieldInfo.customerField = custResult[0].item.name;
 
       const fuseQuantity = new Fuse(fieldInfo.numbers, options);
-      const quantResult = fuseQuantity.search('quantity|amount');
+      const quantResult = fuseQuantity.search('quantity');
       if (quantResult.length > 0)
         fieldInfo.quantityField = quantResult[0].item.name;
 
