@@ -29,6 +29,7 @@ import markerClusters from 'highcharts/modules/marker-clusters';
 import * as jstat from "jstat";
 import LimitUpliftModal from "./modals/LimitUpliftModal";
 import IngestProcess from "./IngestProcess";
+import _ from 'lodash';
 
 markerClusters(Highcharts);
 
@@ -129,6 +130,7 @@ const App = ({ signOut, user }) => {
 
   const [upliftLimit, setUpliftLimit] = useState(0);
   const [selectedCluster, setSelectedCluster] = useState(0);
+  const [ingestionComplete, setIngestionStatus] = useState(false);
   const [groupModalOpen, openGroupModal] = useState(false);
   const [upliftModalOpen, openUpliftModal] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
@@ -139,6 +141,7 @@ const App = ({ signOut, user }) => {
   const gridRef = useRef(); // Optional - for accessing Grid's API
   const custGridRef = useRef(); // Optional - for accessing Grid's API
   const [rowData, setRowData] = useState([]);
+  const [blankData, setBlankData] = useState([]);
   const [isolatedData, setIsolatedData] = useState([]);
   const [groupData, setGroupData] = useState([]);
   const [rawCustomerData, setRawCustomerData] = useState([]);
@@ -162,7 +165,10 @@ const App = ({ signOut, user }) => {
  
   // DefaultColDef sets props common to all Columns
   const defaultColDef = useMemo( ()=> ({
-    sortable: true
+    sortable: true,
+    cellClass: params => {
+      return params.value === null ? 'blank-cell' : '';
+    } 
   }));
 
   var filterParams = {
@@ -826,6 +832,38 @@ const App = ({ signOut, user }) => {
     return dVal;
   }
 
+  function createAnalysisData(fieldInfo) {
+    var custHeader = fieldInfo.currentCustTab;
+    var quantityHeader = fieldInfo.currentQuantTab;
+    var revenueHeader = fieldInfo.currentRevTab;
+    var revFormula = fieldInfo.numberFormula;
+
+    var previewData = [];
+    rowData.forEach(function(row){
+      var newRow = {};
+      newRow.rowID = row.__rowNum__;
+      newRow.customer = row[custHeader];
+      newRow.quantity = row[quantityHeader];
+      if (revFormula === "") {
+        newRow.revenue = row[revenueHeader];
+      } else {
+        revFormula = revFormula.replace("{", "");
+        revFormula = revFormula.replace("}", "");
+        var rowCalcs = revFormula.split(" X ");
+        var revVal = 0;
+        rowCalcs.forEach(function(revNum){
+          if (revVal === 0) {
+            revVal = parseFloat(row[revNum.trim()]);
+          } else {
+            revVal = revVal * parseFloat(row[revNum.trim()]);
+          }
+        });
+        newRow.revenue = parseFloat(revVal.toFixed(2));
+      }
+      previewData.push(newRow);
+    });
+  }
+
   const setLoading = (loadVal) => {
     setDataLoading(loadVal);
   };
@@ -834,9 +872,146 @@ const App = ({ signOut, user }) => {
     setFieldInformation(fieldInput);
   };
 
+  const checkBlankData = (fieldInfo) => {
+
+    var custHeader = fieldInfo.currentCustTab;
+    var quantityHeader = fieldInfo.currentQuantTab;
+    var revenueHeader = fieldInfo.currentRevTab;
+    var revFormula = fieldInfo.numberFormula;
+
+    var missingData = [];
+
+    rowData.forEach(function(row){
+
+      var isBlank = false;
+      var custData = row[custHeader];
+      var quantData = row[quantityHeader];
+      var revData = row[revenueHeader];
+      var rowCalcs = [];
+
+      if (custData === "" || custData === undefined || custData === null) {
+        row[custHeader] = null;
+        isBlank = true;
+      } 
+
+      if (quantData === "" || quantData === undefined || quantData === null) {
+        row[quantityHeader] = null;
+        isBlank = true;
+      }        
+
+      if (revFormula === "") {
+        if (revData === "" || revData === undefined || revData === null) {
+          row[revenueHeader] = null;
+          isBlank = true;
+        }
+      } else {
+        revFormula = revFormula.replace("{", "");
+        revFormula = revFormula.replace("}", "");
+        rowCalcs = revFormula.split(" X ");
+        rowCalcs.forEach(function(revNum){
+          var revFieldName = revNum.trim();
+          if (row[revFieldName] === "" || row[revFieldName] === undefined || row[revFieldName] === null) {
+            row[revFieldName] = null;
+            isBlank = true;
+          }
+        });
+      }
+      
+      if (isBlank) {
+
+        let blankRow = _.cloneDeep(row);
+        blankRow.rowID = row.__rowNum__
+        missingData.push(blankRow);
+
+      }
+
+    });
+
+    if (missingData.length > 0) {
+
+      //set columns and save missing data
+      var sampRow = missingData[0];
+      var colDefs = [];
+
+      Object.keys(sampRow).forEach(function(key,index) {
+        // key: the name of the object key
+        // index: the ordinal position of the key within the object 
+
+        var newDef = {
+          field: key, 
+          headerName: key, 
+          filter: true, 
+          floatingFilter: true, 
+          resizable: true,
+          valueSetter: (params) => {
+            var newVal = params.newValue;
+            var valueChanged = params.data[params.colDef.field] !== newVal;
+
+            if (params.colDef.field === quantityHeader || params.colDef.field === revenueHeader || revFormula.indexOf(key) > -1)
+              newVal = parseFloat(newVal);
+
+            if (valueChanged) {
+              params.data[params.colDef.field] = newVal;
+            }
+
+            return true;
+          }
+        }
+
+        if (key === revenueHeader || key === quantityHeader || key === custHeader || revFormula.indexOf(key) > -1) {
+          newDef.editable = true;
+        }
+
+        if (key === revenueHeader || key === quantityHeader || revFormula.indexOf(key) > -1) {
+          newDef.filter = 'agNumberColumnFilter';
+        }
+
+        if (key === "rowID")
+          newDef.hide = true;
+
+        colDefs.push(newDef);
+
+      });
+
+      setColumnDefs(colDefs);
+      setBlankData(missingData);
+
+    }
+
+  }
+
+  function saveBlankEdits() {
+
+    var allData = rowData;
+
+    gridRef.current.api.forEachNode((rowNode, index) => {
+
+      var tID = rowNode.data.rowID;
+      var tRow = allData.filter(function(row){
+        return row.__rowNum__ === tID;
+      })[0];
+
+      //update data with lodash
+      var newRow = _.merge(tRow, rowNode.data);
+      tRow = newRow;
+    });
+
+    setRowData(allData);
+    setBlankData([]);
+    setToastVariant("success");
+    setToastMessage("Missing Data Updated Successfully");
+    setToastViz(true);
+
+    setIngestionStatus(true);
+    console.log(rowData);
+
+  }
+
   const handleData = (xData) =>{
 
-    setColumnDefs([
+    //console.log(xData);
+
+    /*setColumnDefs([
       {field: 'customer_name', headerName: 'Customer Name', filter: true, rowGroup: true, sort: 'asc', floatingFilter: true, hide: true, resizable: true},
       {field: 'product_name', headerName: 'Product Name', filter: true, floatingFilter: true, resizable: true},
       {field: 'transaction_date', headerName: 'Transaction Date', filter: 'agDateColumnFilter', filterParams: filterParams, floatingFilter: true, resizable: true, valueFormatter: dateFormatter},
@@ -882,9 +1057,9 @@ const App = ({ signOut, user }) => {
         rowObj[newKey] = newData;
       });
       rowData.push(rowObj);
-    }
+    }*/
 
-    setRowData(rowData);
+    setRowData(xData);
 
 }
 
@@ -1011,36 +1186,58 @@ const App = ({ signOut, user }) => {
           <Image src="/Group171.svg" alt="" className={rowData.length == 0 && !dataLoading ? 'img-fluid parseIntro' : 'd-none'} />
       </div>
 
-      <div className={rowData.length > 0 ? '' : 'd-none'}>
+      <div className={rowData.length > 0 && !ingestionComplete ? '' : 'd-none'}>
+        <Row style={{marginTop: "10px"}} className={blankData.length === 0 ? '' : 'd-none'}>
+          <Col><IngestProcess fieldInfo={fieldInformation} postIngest={checkBlankData} /></Col>
+        </Row>
+      </div>
+
+      <div className={rowData.length > 0 && ingestionComplete ? '' : 'd-none'}>
         <Row style={{marginTop: "10px"}}>
-          <Col><IngestProcess fieldInfo={fieldInformation} /></Col>
+          <Col>
+            <Alert variant="success" style={{textAlign: 'left'}}>
+            <Alert.Heading>Ingestion Complete!</Alert.Heading>
+            <p>
+                We have successfully ingested {rowData.length} rows of your uploaded data.  The data is ready for presentation, but we have not built out the next steps of Parsa to present the data...
+            </p>       
+            <p>
+                NOTE: All of your data has been logged to the browser console so you can test if you want to make sure the missing data was updated if you made edits.
+            </p>         
+            </Alert>
+          </Col>
         </Row>
       </div>
         
         <Row>
           <Col>
-          { rowData.length === 255 ? <div className="ag-theme-alpine" style={{width: "100%", height: 500}}>
-        <Alert key='warning' variant='warning'>
-          Select grouped customer rows of customers you want to add to a Customer Group
-        </Alert>
+          { blankData.length > 0 ? <div className="ag-theme-alpine" style={{width: "100%", height: 500}}>
+        <Alert variant="warning" style={{textAlign: 'left'}}>
+          <Alert.Heading>Missing Data Elements</Alert.Heading>
+          <p>
+              Before we complete the ingestion process we noticed you have {blankData.length} rows with missing data in key fields.  Please make your optional edits to the highlighted fields in the table below.  When you are satisfied with the missing data, click Save Edits to continue the ingestion process.
+          </p>
+          <span className="blankEditConfirm"><Button onClick={() => saveBlankEdits()} className="btn-success">Save Edits</Button></span>
+                    
+          </Alert>
         <AgGridReact
             ref={gridRef} // Ref for accessing Grid's API
 
-            rowData={rowData} // Row Data for Rows
+            rowData={blankData} // Row Data for Rows
             onFirstDataRendered={onFirstDataRendered}
             columnDefs={columnDefs} // Column Defs for Columns
             defaultColDef={defaultColDef} // Default Column Properties
-            suppressAggFuncInHeader={true}
-            autoGroupColumnDef={autoGroupColumnDef}
-            groupDisplayType='singleColumn'
-            groupSelectsChildren={true}
-            showOpenedGroup={true}
+            //suppressAggFuncInHeader={true}
+            //autoGroupColumnDef={autoGroupColumnDef}
+            //groupDisplayType='singleColumn'
+            //groupSelectsChildren={true}
+            //showOpenedGroup={true}
+            stopEditingWhenCellsLoseFocus={true}
+            singleClickEdit={true}
             animateRows={true} // Optional - set to 'true' to have rows animate when sorted
-            rowSelection='multiple' // Options - allows click selection of rows
-            groupAggFiltering={true}
+            //rowSelection='multiple' // Options - allows click selection of rows
+            //groupAggFiltering={true}
             />
-            <br />
-            <Button onClick={() => createNewGroup()}>Create Customer Group</Button>
+
       </div> : null }
           </Col>
         </Row>

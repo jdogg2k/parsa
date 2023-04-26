@@ -94,3 +94,12 @@
     text-align: left;
     margin-top: 5px;
 }
+
+.blank-cell {
+  background-color: #ffd1d1;
+}
+
+.blankEditConfirm {
+  text-align: right;
+  display: block;
+}

@@ -71,10 +71,8 @@ class IngestProcess extends Component {
     }
 
     confirmStructure(e) {
-        alert("DATA DEFINITION IS SET, NEXT STEPS TBD...");
+        this.props.postIngest(this.state);
     }
-
-    /**/
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.fieldInfo !== this.props.fieldInfo) {
@@ -87,8 +85,6 @@ class IngestProcess extends Component {
             if (this.props.fieldInfo.revenueField !== undefined)
                 this.setActiveRevenue(this.props.fieldInfo.revenueField);
 
-
-                console.log(this.props.fieldInfo);
         }
     }
 
