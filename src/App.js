@@ -1214,9 +1214,11 @@ const App = ({ signOut, user }) => {
         <Alert variant="warning" style={{textAlign: 'left'}}>
           <Alert.Heading>Missing Data Elements</Alert.Heading>
           <p>
-              Before we complete the ingestion process we noticed you have {blankData.length} rows with missing data in key fields.  Please make your optional edits to the highlighted fields in the table below.  When you are satisfied with the missing data, click Save Edits to continue the ingestion process.
+              Before we complete the ingestion process we noticed you have {blankData.length} rows with missing data in key fields. 
+              We'll need you to fill in the highlighted fields in the table below or we'll have to exclude the rows from the analysis. 
+              Click Continue when you've filled in what you can and/or are ready to proceed.
           </p>
-          <span className="blankEditConfirm"><Button onClick={() => saveBlankEdits()} className="btn-success">Save Edits</Button></span>
+          <span className="blankEditConfirm"><Button onClick={() => saveBlankEdits()} className="btn-success">Continue</Button></span>
                     
           </Alert>
         <AgGridReact
