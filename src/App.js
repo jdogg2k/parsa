@@ -1188,7 +1188,7 @@ const App = ({ signOut, user }) => {
 
       <div className={rowData.length > 0 && !ingestionComplete ? '' : 'd-none'}>
         <Row style={{marginTop: "10px"}} className={blankData.length === 0 ? '' : 'd-none'}>
-          <Col><IngestProcess fieldInfo={fieldInformation} postIngest={checkBlankData} /></Col>
+          <Col><IngestProcess fieldInfo={fieldInformation} rowData={rowData} postIngest={checkBlankData} /></Col>
         </Row>
       </div>
 

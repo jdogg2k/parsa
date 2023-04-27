@@ -11,7 +11,9 @@ class IngestProcess extends Component {
             currentRevTab: "",
             selectedNums: new Map(),
             numberCalcs: [],
-            numberFormula: ""
+            numberFormula: "",
+            previewQuanityTotal: 0,
+            previewRevenueTotal: 0
         }
 
         this.setActiveCustomer = function(custVal) {
@@ -19,18 +21,36 @@ class IngestProcess extends Component {
         }
 
         this.setActiveQuantity = function(quantVal) {
-            this.setState({ currentQuantTab: quantVal});
+            var allData = this.props.rowData;
+            var pTotal = 0;
+            for(var i = 0; i < allData.length; i++){
+                if (allData[i][quantVal] !== undefined)
+                    pTotal += allData[i][quantVal];
+            }
+
+            this.setState({ currentQuantTab: quantVal, previewQuanityTotal: pTotal.toLocaleString()});
         }
 
         this.setActiveRevenue = function(revVal) {
-            this.setState({ currentRevTab: revVal });
+            var allData = this.props.rowData;
+            var pTotal = 0;
+            for(var i = 0; i < allData.length; i++){
+                if (allData[i][revVal] !== undefined)
+                    pTotal += allData[i][revVal];
+            }
+
+            this.setState({ currentRevTab: revVal, previewRevenueTotal: pTotal.toLocaleString()});
         }
 
         this.handleChange = this.handleChange.bind(this);
+        this.panelClick = this.panelClick.bind(this);
+        this.doFormulaCalc = this.doFormulaCalc.bind(this);
         this.confirmStructure = this.confirmStructure.bind(this);
     }
 
-    handleCalc = (e) => () => {
+    doFormulaCalc() {
+        var allData = this.props.rowData;
+        var pTotal = 0;
         var numCalcs = [];
         var numFormula = "";
         var rowCount = 1;
@@ -56,10 +76,32 @@ class IngestProcess extends Component {
             rowCount++;
         });
 
+        allData.forEach(function(tRow){
+            var calcVal = null;
+
+            selectedArray.forEach(function(item){
+                if (calcVal === null) {
+                    if (tRow[item] !== undefined)
+                        calcVal = tRow[item];
+                        
+                } else {
+                    if (tRow[item] !== undefined)
+                        calcVal = calcVal * tRow[item];
+                }
+                
+            })
+
+            pTotal +=  calcVal;
+        });
+
         if (numFormula != "")
             numFormula = "{" + numFormula + "}";
         
-        this.setState({numberCalcs: numCalcs, numberFormula: numFormula});
+        this.setState({numberCalcs: numCalcs, numberFormula: numFormula, previewRevenueTotal: pTotal.toLocaleString()});
+    }
+
+    handleCalc = (e) => () => {
+        this.doFormulaCalc();        
     }
 
     handleChange(e) {
@@ -68,6 +110,20 @@ class IngestProcess extends Component {
 
         this.setState(prevState => ({ selectedNums: prevState.selectedNums.set(item, isChecked) }), this.handleCalc(e));  
 
+    }
+
+    panelClick(tIndex) {
+        var idx = parseInt(tIndex);
+
+        if (idx === 1) {
+            this.setActiveQuantity(this.state.currentQuantTab);
+        }
+        if (idx === 2) {
+            this.setActiveRevenue(this.state.currentRevTab);
+        }
+        if (idx === 3) {
+            this.doFormulaCalc();
+        }
     }
 
     confirmStructure(e) {
@@ -97,7 +153,7 @@ render() {
                 The base ingestion is complete. Now we need to determine key fields to continue the analysis.  Please walk through the steps below.
             </p>
             </Alert>
-            <Accordion defaultActiveKey="0">
+            <Accordion defaultActiveKey="0" onSelect={this.panelClick}>
             <Accordion.Item eventKey="0">
                 <Accordion.Header>Customer Definition</Accordion.Header>
                 <Accordion.Body>
@@ -199,11 +255,11 @@ render() {
                                     )
                                 }) : ""
                             }
+                            <Alert variant='primary'>Total Quantity of ingested data: <span className="bold-text">{this.state.previewQuanityTotal}</span></Alert>
                         </Tab.Content>
                         </Col>
                     </Row>
                     </Tab.Container>
-
                 </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="2">
@@ -253,6 +309,7 @@ render() {
                                     )
                                 }) : ""
                             }
+                            <Alert variant='primary'>Total Revenue of ingested data: $<span className="bold-text">{this.state.previewRevenueTotal}</span></Alert>
                         </Tab.Content>
                         </Col>
                     </Row>
@@ -290,14 +347,15 @@ render() {
                         </Col>
                         <Col sm={10}>
                             <ListGroup>
-                                                {this.state.numberFormula !== "" ?
-                                                    this.state.numberCalcs.map(num => {
-                                                        return(
-                                                            <ListGroup.Item key={num.id} variant="default">{num.value}</ListGroup.Item>
-                                                        )
-                                                    }) : ""
-                                                }
-                                            </ListGroup>
+                                {this.state.numberFormula !== "" ?
+                                    this.state.numberCalcs.map(num => {
+                                        return(
+                                            <ListGroup.Item key={num.id} variant="default">{num.value}</ListGroup.Item>
+                                        )
+                                    }) : ""
+                                }
+                            </ListGroup>
+                            <Alert variant='primary' className={this.state.numberFormula !== "" ? '' : 'd-none'}>Total Revenue of ingested data: $<span className="bold-text">{this.state.previewRevenueTotal}</span></Alert>
                         </Col>
                     </Row>
                     </Form>
