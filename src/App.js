@@ -167,7 +167,7 @@ const App = ({ signOut, user }) => {
   const defaultColDef = useMemo( ()=> ({
     sortable: true,
     cellClass: params => {
-      return params.value === null ? 'blank-cell' : '';
+      return (params.value === null || params.value === undefined || params.value === "") ? 'blank-cell' : '';
     } 
   }));
 
@@ -945,13 +945,19 @@ const App = ({ signOut, user }) => {
           resizable: true,
           valueSetter: (params) => {
             var newVal = params.newValue;
-            var valueChanged = params.data[params.colDef.field] !== newVal;
 
-            if (params.colDef.field === quantityHeader || params.colDef.field === revenueHeader || revFormula.indexOf(key) > -1)
-              newVal = parseFloat(newVal);
+            if (newVal !== undefined) {
 
-            if (valueChanged) {
-              params.data[params.colDef.field] = newVal;
+              var valueChanged = params.data[params.colDef.field] !== newVal;
+
+              if (params.colDef.field === quantityHeader || params.colDef.field === revenueHeader || revFormula.indexOf(key) > -1)
+                if (newVal !== "")
+                  newVal = parseFloat(newVal);
+
+              if (valueChanged) {
+                params.data[params.colDef.field] = newVal;
+              }
+
             }
 
             return true;
