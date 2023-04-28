@@ -209,7 +209,7 @@ render() {
                 </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="1">
-                <Accordion.Header>Quanitity Definition</Accordion.Header>
+                <Accordion.Header>Quantity Definition</Accordion.Header>
                 <Accordion.Body>
 
                     <span className={this.state.currentQuantTab !== '' ? '' : 'd-none'}>From looking at your data we have identified the selected field to define your Quantity data element<br/>
