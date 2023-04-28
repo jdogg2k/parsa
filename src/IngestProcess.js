@@ -319,7 +319,7 @@ render() {
             <Accordion.Item eventKey="3">
                 <Accordion.Header>Revenue Definition (Calculation)</Accordion.Header>
                 <Accordion.Body>
-                    You can optionally override the single-field suggestion and instead select two-or-more fields below to calculate revenue.<br />
+                    You can optionally override the single-field suggestion and instead select two or more fields below to calculate revenue.<br />
                     As you select the fields the sample calculation results will display.
 
                     <Alert variant="info" className={this.state.numberFormula !== "" ? '' : 'd-none'}>
