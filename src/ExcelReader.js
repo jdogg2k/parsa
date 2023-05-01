@@ -69,6 +69,7 @@ class ExcelReader extends Component {
 
       var fieldInfo = {};
       fieldInfo.customerField = undefined;
+      fieldInfo.productField = undefined;
       fieldInfo.quantityField = undefined;
       fieldInfo.revenueField = undefined;
       fieldInfo.strings = tFields.filter(function(f){
@@ -100,6 +101,11 @@ class ExcelReader extends Component {
       const custResult = fuseCustomer.search('customer');
       if (custResult.length > 0)
         fieldInfo.customerField = custResult[0].item.name;
+
+      const fuseProduct = new Fuse(fieldInfo.strings, options);
+      const prodResult = fuseProduct.search('product');
+      if (prodResult.length > 0)
+        fieldInfo.productField = prodResult[0].item.name;
 
       const fuseQuantity = new Fuse(fieldInfo.numbers, options);
       const quantResult = fuseQuantity.search('quantity');

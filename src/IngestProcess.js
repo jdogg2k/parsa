@@ -7,17 +7,26 @@ class IngestProcess extends Component {
         super(props);
         this.state = {
             currentCustTab: "",
+            currentProductTab: "",
             currentQuantTab: "",
             currentRevTab: "",
             selectedNums: new Map(),
+            selectedStrings: new Map(),
             numberCalcs: [],
             numberFormula: "",
+            productCalcs: [],
+            productItems: [],
+            productFormula: "",
             previewQuanityTotal: 0,
             previewRevenueTotal: 0
         }
 
         this.setActiveCustomer = function(custVal) {
             this.setState({ currentCustTab: custVal});
+        }
+
+        this.setActiveProduct = function(prodVal) {
+            this.setState({ currentProductTab: prodVal});
         }
 
         this.setActiveQuantity = function(quantVal) {
@@ -43,8 +52,10 @@ class IngestProcess extends Component {
         }
 
         this.handleChange = this.handleChange.bind(this);
+        this.handleProductChange = this.handleProductChange.bind(this);
         this.panelClick = this.panelClick.bind(this);
         this.doFormulaCalc = this.doFormulaCalc.bind(this);
+        this.doProductCalc = this.doProductCalc.bind(this);
         this.confirmStructure = this.confirmStructure.bind(this);
     }
 
@@ -104,6 +115,40 @@ class IngestProcess extends Component {
         this.doFormulaCalc();        
     }
 
+    handleProductCalc = (e) => () => {
+        this.doProductCalc();        
+    }
+
+    doProductCalc() {
+        var prodCalcs = [];
+        var rowCount = 1;
+        var prodItems = this.state.productItems;
+
+        const checkedMap = new Map([...this.state.selectedStrings].filter(([k, v])=>v===true));
+        const selectedArray = Array.from(checkedMap.keys());
+
+        this.props.fieldInfo.sampleStringData.forEach(function(strRow){
+            var calcObj = {};
+            calcObj.id = rowCount;
+            calcObj.value = null;
+
+            prodItems.forEach(function(item){
+                if (calcObj.value === null) {
+                    calcObj.value = strRow[item];
+                } else {
+                    calcObj.value = calcObj.value + "-" + strRow[item];
+                }
+            })
+
+            prodCalcs.push(calcObj);
+
+            rowCount++;
+        });
+        
+        this.setState({productCalcs: prodCalcs});
+    }
+
+
     handleChange(e) {
         const item = e.target.value;
         const isChecked = e.target.checked;
@@ -112,16 +157,37 @@ class IngestProcess extends Component {
 
     }
 
+    handleProductChange(e) {
+        const item = e.target.value;
+        const isChecked = e.target.checked;
+
+        var oldItems = this.state.productItems;
+        if (oldItems.length === 0 && isChecked){
+            oldItems.push(item);
+        } else {
+            var existItem = oldItems.indexOf(item);
+            if (existItem > -1) {
+                oldItems.splice(existItem, 1);
+            }
+
+            if (isChecked)
+                oldItems.push(item);
+        }
+
+        this.setState(prevState => ({ selectedStrings: prevState.selectedStrings.set(item, isChecked), productItems: oldItems }), this.handleProductCalc(e));  
+
+    }
+
     panelClick(tIndex) {
         var idx = parseInt(tIndex);
 
-        if (idx === 1) {
+        if (idx === 3) {
             this.setActiveQuantity(this.state.currentQuantTab);
         }
-        if (idx === 2) {
+        if (idx === 4) {
             this.setActiveRevenue(this.state.currentRevTab);
         }
-        if (idx === 3) {
+        if (idx === 5) {
             this.doFormulaCalc();
         }
     }
@@ -134,6 +200,9 @@ class IngestProcess extends Component {
         if (prevProps.fieldInfo !== this.props.fieldInfo) {
             if (this.props.fieldInfo.customerField !== undefined)
                 this.setActiveCustomer(this.props.fieldInfo.customerField);
+
+            if (this.props.fieldInfo.productField !== undefined)
+                this.setActiveProduct(this.props.fieldInfo.productField);
 
             if (this.props.fieldInfo.quantityField !== undefined)
                 this.setActiveQuantity(this.props.fieldInfo.quantityField);
@@ -209,6 +278,105 @@ render() {
                 </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="1">
+                <Accordion.Header>Product Definition (Single Field)</Accordion.Header>
+                <Accordion.Body>
+
+                    <span className={this.state.currentProductTab !== '' ? '' : 'd-none'}>From looking at your data we have identified the selected field to define your Product data element<br/>
+                    If you would like to override this suggestion, please select a different text field below</span>
+
+                    <Alert variant="danger" className={this.state.currentProductTab !== '' ? 'd-none' : ''}>
+                        We were unable to automatically detect the Product field in your dataset.  Please select a text field from the options below.
+                    </Alert>
+
+                    <Tab.Container id="productTabs" activeKey={this.state.currentProductTab}>
+                    <Row style={{marginTop: '15px'}}>
+                        <Col sm={4}>
+                        <ListGroup style={{textAlign: 'left'}}>
+                            {this.props.fieldInfo.strings != undefined ?
+
+                                this.props.fieldInfo.strings.map(str => {
+
+                                    return(
+                                        <ListGroup.Item key={str.name} action className={str.name === this.state.currentProductTab ? 'active' : ''}  onClick={() => this.setActiveProduct(str.name)}>
+                                            {str.name}
+                                        </ListGroup.Item>
+                                    )
+                                }) : ""
+                            }
+                        </ListGroup>
+                        </Col>
+                        <Col sm={8}>
+                        <Tab.Content>
+                            {this.props.fieldInfo.strings != undefined ?
+                                this.props.fieldInfo.strings.map(str => {
+                                    return(
+                                        <Tab.Pane key={'pane' + str.name} eventKey={str.name}>
+                                            <ListGroup>
+                                                {this.props.fieldInfo.sampleStringData != undefined ?
+                                                    this.props.fieldInfo.sampleStringData.map(data => {
+                                                        return(
+                                                            <ListGroup.Item key={data.__rowNum__} variant="info">{data[str.name]}</ListGroup.Item>
+                                                        )
+                                                    }) : ""
+                                                }
+                                            </ListGroup>
+                                        </Tab.Pane>
+                                    )
+                                }) : ""
+                            }
+                        </Tab.Content>
+                        </Col>
+                    </Row>
+                    </Tab.Container>
+
+                </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="2">
+                <Accordion.Header>Product Definition (Combined)</Accordion.Header>
+                <Accordion.Body>
+                You can optionally override the single-field suggestion and instead select two or more fields below to define products.<br />
+                The order in which you select the fields will set the associated hierarchy/order of the combined product definition.<br />
+                Clear your selection to reset the order of selected fields.  As you select the fields the sample results will display.
+
+                <Alert variant="info" className={this.state.productItems.length > 0 ? '' : 'd-none'}>
+                    <p>
+                        {this.state.productItems.join(" | ")}
+                    </p>
+                    </Alert>
+
+                    <Form>
+                    <Row style={{marginTop: '15px'}}>
+                        <Col sm={2}>
+                        <ListGroup>
+                        {this.props.fieldInfo.strings != undefined ?
+
+                        this.props.fieldInfo.strings.map(item => {
+
+                            return(
+                                    <label key={item.name} className="multiCheckLabel">
+                                        <input type="checkbox" value={item.name} onChange={this.handleProductChange} className="multiCheck"/>{item.name}
+                                    </label>
+                            )
+                        }) : ""
+                        }
+                        </ListGroup>
+                        </Col>
+                        <Col sm={10}>
+                            <ListGroup>
+                                {this.state.productItems.length > 0 ?
+                                    this.state.productCalcs.map(num => {
+                                        return(
+                                            <ListGroup.Item key={num.id} variant="default">{num.value}</ListGroup.Item>
+                                        )
+                                    }) : ""
+                                }
+                            </ListGroup>
+                        </Col>
+                    </Row>
+                    </Form>
+                </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="3">
                 <Accordion.Header>Quantity Definition</Accordion.Header>
                 <Accordion.Body>
 
@@ -262,7 +430,7 @@ render() {
                     </Tab.Container>
                 </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="2">
+            <Accordion.Item eventKey="4">
                 <Accordion.Header>Revenue Definition (Single Field)</Accordion.Header>
                 <Accordion.Body>
 
@@ -316,7 +484,7 @@ render() {
                     </Tab.Container>
                 </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="3">
+            <Accordion.Item eventKey="5">
                 <Accordion.Header>Revenue Definition (Calculation)</Accordion.Header>
                 <Accordion.Body>
                     You can optionally override the single-field suggestion and instead select two or more fields below to calculate revenue.<br />
@@ -361,7 +529,7 @@ render() {
                     </Form>
                 </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="4">
+            <Accordion.Item eventKey="6">
                 <Accordion.Header>Confirm Data Configuration</Accordion.Header>
                 <Accordion.Body>
                     <Alert variant="info">
@@ -373,6 +541,10 @@ render() {
                         <Form.Group className="mb-3" controlId="customerLabel">
                             <Form.Label>Customer Field</Form.Label>
                             <Form.Control type="text" placeholder={this.state.currentCustTab} readOnly/>
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="productLabel">
+                            <Form.Label>Product {this.state.productItems.length > 0 ? 'Combination' : 'Field'}</Form.Label>
+                            <Form.Control type="text" placeholder={this.state.productItems.length > 0 ? this.state.productItems.join(" | ") : this.state.currentProductTab} readOnly/>
                         </Form.Group>
                         <Form.Group className="mb-3" controlId="quantityLabel">
                             <Form.Label>Quantity Field</Form.Label>

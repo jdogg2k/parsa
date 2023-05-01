@@ -875,6 +875,8 @@ const App = ({ signOut, user }) => {
   const checkBlankData = (fieldInfo) => {
 
     var custHeader = fieldInfo.currentCustTab;
+    var productHeader = fieldInfo.currentProductTab;
+    var productItems = fieldInfo.productItems;
     var quantityHeader = fieldInfo.currentQuantTab;
     var revenueHeader = fieldInfo.currentRevTab;
     var revFormula = fieldInfo.numberFormula;
@@ -885,6 +887,7 @@ const App = ({ signOut, user }) => {
 
       var isBlank = false;
       var custData = row[custHeader];
+      var productData = row[productHeader];
       var quantData = row[quantityHeader];
       var revData = row[revenueHeader];
       var rowCalcs = [];
@@ -893,6 +896,20 @@ const App = ({ signOut, user }) => {
         row[custHeader] = null;
         isBlank = true;
       } 
+
+      if (productItems.length === 0) {
+        if (productData === "" || productData === undefined || productData === null) {
+          row[productHeader] = null;
+          isBlank = true;
+        }
+      } else {
+        productItems.forEach(function(prodField){
+          if (row[prodField] === "" || row[prodField] === undefined || row[prodField] === null) {
+            row[prodField] = null;
+            isBlank = true;
+          }
+        });
+      }
 
       if (quantData === "" || quantData === undefined || quantData === null) {
         row[quantityHeader] = null;
@@ -964,7 +981,7 @@ const App = ({ signOut, user }) => {
           }
         }
 
-        if (key === revenueHeader || key === quantityHeader || key === custHeader || revFormula.indexOf(key) > -1) {
+        if (key === revenueHeader || key === productHeader || productItems.indexOf(key) > -1 || key === quantityHeader || key === custHeader || revFormula.indexOf(key) > -1) {
           newDef.editable = true;
         }
 
@@ -978,6 +995,8 @@ const App = ({ signOut, user }) => {
         colDefs.push(newDef);
 
       });
+
+      console.log(colDefs);
 
       setColumnDefs(colDefs);
       setBlankData(missingData);
