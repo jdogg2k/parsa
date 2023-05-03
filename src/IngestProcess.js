@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Container, Accordion, Alert, ListGroup, Row, Col, Tab, Form, Button } from 'react-bootstrap';
 import { ThemeConsumer } from 'react-bootstrap/esm/ThemeProvider';
+import _ from 'lodash';
 
 class IngestProcess extends Component {
     constructor(props) {
@@ -18,11 +19,13 @@ class IngestProcess extends Component {
             productItems: [],
             productFormula: "",
             previewQuanityTotal: 0,
+            previewCustomerTotal: 0,
             previewRevenueTotal: 0
         }
 
         this.setActiveCustomer = function(custVal) {
-            this.setState({ currentCustTab: custVal});
+            var uCustomers = _.uniqBy(this.props.rowData, custVal); //get unique values from all data
+            this.setState({ currentCustTab: custVal, previewCustomerTotal: uCustomers.length.toLocaleString()});
         }
 
         this.setActiveProduct = function(prodVal) {
@@ -270,11 +273,11 @@ render() {
                                     )
                                 }) : ""
                             }
+                            <Alert variant='primary'>Total Number of Unique Customers: <span className="bold-text">{this.state.previewCustomerTotal}</span></Alert>
                         </Tab.Content>
                         </Col>
                     </Row>
                     </Tab.Container>
-
                 </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="1">
