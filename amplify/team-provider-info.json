@@ -16,7 +16,14 @@
         "parsad8cd49f9": {}
       },
       "api": {
-        "parsa": {}
+        "parsa": {},
+        "pythonParsingApi": {}
+      },
+      "function": {
+        "pythonparsingapi": {
+          "deploymentBucketName": "amplify-amplify1f6579cdcf524-staging-144623-deployment",
+          "s3Key": "amplify-builds/pythonparsingapi-6c363478756e724a646f-build.zip"
+        }
       }
     }
   }

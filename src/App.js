@@ -12,7 +12,8 @@ import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import "./App.css";
 import ExcelReader from './ExcelReader';
 import "@aws-amplify/ui-react/styles.css";
-import { API } from "aws-amplify";
+import { Amplify, API } from 'aws-amplify';
+import config from './aws-exports';
 import { Container, Row, Col, Modal, Button, Alert, Image, ListGroup } from 'react-bootstrap';
 import { createCustomer, createCustomerGroup, createCustomerData, deleteCustomer, deleteCustomerGroup, deleteCustomerData } from './graphql/mutations';
 import { listCustomerGroups, customersByCustomerGroupID, customerDataByCustomerID, listCustomers, getCustomer, listCustomerData, getCustomerData } from "./graphql/queries";
@@ -30,6 +31,8 @@ import * as jstat from "jstat";
 import LimitUpliftModal from "./modals/LimitUpliftModal";
 import IngestProcess from "./IngestProcess";
 import _ from 'lodash';
+
+Amplify.configure(config);
 
 markerClusters(Highcharts);
 
@@ -287,6 +290,22 @@ const App = ({ signOut, user }) => {
       makeToast('No Customers Selected, cannot create group!', 'danger');
     }
     
+  }
+
+  async function getDataClusters(customers, products, revenue) {
+
+    const myPayload = {
+      body: {
+        customers: JSON.stringify(customers),
+        products: JSON.stringify(products),
+        revenue: JSON.stringify(revenue)
+      }
+    };
+
+    const data = await API.post('pythonParsingApi', '/items', myPayload);
+
+    console.log(data);
+
   }
 
   async function getCustomerGroups() {
@@ -1000,6 +1019,23 @@ const App = ({ signOut, user }) => {
 
       setColumnDefs(colDefs);
       setBlankData(missingData);
+
+    } else {
+      setToastVariant("success");
+      setToastMessage("Missing Data Updated Successfully");
+      setToastViz(true);
+
+      setIngestionStatus(true);
+
+      //start processing data for python
+
+      var mappedCustomers = rowData.map((row) => row[custHeader]);
+      var mappedProducts = rowData.map((row) => row[productHeader]);
+      var mappedRevenue = rowData.map((row) => row[revenueHeader]);
+
+      getDataClusters(mappedCustomers, mappedProducts, mappedRevenue);
+
+      console.log(rowData);
 
     }
 
