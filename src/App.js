@@ -49,6 +49,7 @@ const App = ({ signOut, user }) => {
   }
 
   const chartComponentRef = useRef(null);
+  const scatChartComponentRef = useRef(null);
   const [plotData, setPlotData] = useState([]);
   const [seriesData, setSeriesData] = useState([]);
   const options = {
@@ -129,6 +130,52 @@ const App = ({ signOut, user }) => {
         }
       },
     series: seriesData
+};
+
+
+const scatOptions = {
+  title: {
+      text: 'Customer Groups'
+  },
+  xAxis: {
+    min: -1,
+    max: 1
+  },
+  yAxis: {
+      min: -1,
+      max: 1
+  },
+  legend: {
+      enabled: false
+  },
+  tooltip: {
+    formatter: function () {
+          var retStr = "";
+
+          if (this.series.type === 'scatter' && this.point) {
+            retStr = "<b>" + this.point.rawdata.custName + "</b><br/>";
+            retStr += "Product Names: " + this.point.rawdata.productName + "<br/>";
+            retStr += "Distribution Types: " + this.point.rawdata.distType + "<br/>";
+            retStr += "Cost of Goods Sold: $" + Highcharts.numberFormat(this.point.rawdata.costSold,2) + "<br/>";;
+            retStr += "Unit Revenue: $" + Highcharts.numberFormat(this.point.rawdata.unitRevenue,2) + "<br/>";
+            retStr += "Quantity: " + this.point.rawdata.quantity + "<br/>";
+            retStr += "Services Purchased: " + this.point.rawdata.servicesPurchased + "<br/>";
+            retStr += "Service Revenue: " + this.point.rawdata.serviceRevenue + "<br/>";
+            retStr += "Cost of Services: $" + Highcharts.numberFormat(this.point.rawdata.costServices,2) + "<br/>";
+          }
+
+          return retStr;
+        }
+},
+  plotOptions: {
+      scatter: {
+        marker: {
+          radius: 4,
+          symbol: "circle"
+        }
+      }
+    },
+  series: plotData
 };
 
   const [upliftLimit, setUpliftLimit] = useState(0);
@@ -292,19 +339,57 @@ const App = ({ signOut, user }) => {
     
   }
 
-  async function getDataClusters(customers, products, revenue) {
+  async function getDataClusters(rData) {
 
     const myPayload = {
       body: {
-        customers: JSON.stringify(customers),
-        products: JSON.stringify(products),
-        revenue: JSON.stringify(revenue)
+        rowData: JSON.stringify(rData)
       }
     };
 
-    const data = await API.post('pythonParsingApi', '/items', myPayload);
+    console.log("LOADING PYTHON");
+
+    let data = await API.post('pythonParsingApi', '/items', myPayload);
+
+    var fullPlot = [];
 
     console.log(data);
+
+    data.map((clustObj) => {
+
+      var pointsData = [];
+
+      clustObj.customers.map((custObj) => {
+
+        var allData = {};
+        allData.custName = custObj["Customer Name"];
+        allData.productName = custObj["Product Name"];
+        allData.distType = custObj["Distribution Type"];
+        allData.costSold = custObj["Cost of Goods Sold"];
+        allData.unitRevenue = custObj["Unit Revenue ($)"];
+        allData.quantity = custObj["Quantity"];
+        allData.servicesPurchased = custObj["Services Purchased"];
+        allData.serviceRevenue = custObj["Service Revenue"];
+        allData.costServices = custObj["Cost of Services"];
+        pointsData.push({"x" : custObj.x_plot, "y" : custObj.y_plot, "rawdata" : allData});
+      })
+
+      var labelStr = clustObj.label;
+      var labelSplit = labelStr.split(" ");
+      var cNum = parseInt(labelSplit[1]);
+      var clusterColor = cPallete[cNum]
+
+      fullPlot.push({
+        type: 'scatter',
+        name: 'Customer ' + labelStr,
+        color: clusterColor,
+        data: pointsData
+        //clusterData: clusterTotals
+      });
+  
+    })
+
+    setPlotData(fullPlot);
 
   }
 
@@ -1033,9 +1118,40 @@ const App = ({ signOut, user }) => {
       var mappedProducts = rowData.map((row) => row[productHeader]);
       var mappedRevenue = rowData.map((row) => row[revenueHeader]);
 
-      getDataClusters(mappedCustomers, mappedProducts, mappedRevenue);
+      var groupedData = [];
+      rowData.forEach(function(rowObj) {
 
-      console.log(rowData);
+        var tRow = groupedData.filter(function(row){
+          return row[custHeader] === rowObj[custHeader];
+        })[0];
+
+        if (tRow === undefined){
+          tRow = {};
+          tRow[custHeader] = rowObj[custHeader];
+          tRow[productHeader] = rowObj[productHeader];
+          tRow["Distribution Type"] = rowObj["Distribution Type"];
+          tRow["Cost of Goods Sold"] = rowObj["Cost of Goods Sold"];
+          tRow["Unit Revenue ($)"] = rowObj["Unit Revenue ($)"];
+          tRow["Quantity"] = rowObj["Quantity"];
+          tRow["Services Purchased"] = rowObj["Services Purchased"];
+          tRow["Service Revenue"] = rowObj["Service Revenue"];
+          tRow["Cost of Services"] = rowObj["Cost of Services"];
+
+          groupedData.push(tRow);
+        } else {
+          tRow[productHeader] += " " + rowObj[productHeader];
+          tRow["Distribution Type"] += " " + rowObj["Distribution Type"];
+          tRow["Cost of Goods Sold"] += rowObj["Cost of Goods Sold"];
+          tRow["Unit Revenue ($)"] += rowObj["Unit Revenue ($)"];
+          tRow["Quantity"] += rowObj["Quantity"];
+          tRow["Services Purchased"] += " " + rowObj["Services Purchased"];
+          tRow["Service Revenue"] += rowObj["Service Revenue"];
+          tRow["Cost of Services"] += rowObj["Cost of Services"];
+        }
+        
+      });
+
+      getDataClusters(groupedData);
 
     }
 
@@ -1126,6 +1242,7 @@ const App = ({ signOut, user }) => {
 
   useEffect(() => {
     const chart = chartComponentRef.current.chart;
+    const scatChart = scatChartComponentRef.current.chart;
   }, []);
 
   /*async function fetchNotes() {
@@ -1259,12 +1376,14 @@ const App = ({ signOut, user }) => {
             <Alert variant="success" style={{textAlign: 'left'}}>
             <Alert.Heading>Ingestion Complete!</Alert.Heading>
             <p>
-                We have successfully ingested {rowData.length} rows of your uploaded data.  The data is ready for presentation, but we have not built out the next steps of Parsa to present the data...
-            </p>       
-            <p>
-                NOTE: All of your data has been logged to the browser console so you can test if you want to make sure the missing data was updated if you made edits.
-            </p>         
+                We have successfully ingested {rowData.length} rows of your uploaded data.  The data is ready for presentation, see a sneak peek below..
+            </p>        
             </Alert>
+          </Col>
+        </Row>
+        <Row className={plotData.length > 0 ? '' : 'd-none'}>
+          <Col>
+             <HighchartsReact ref={scatChartComponentRef} highcharts={Highcharts} options={scatOptions}/>
           </Col>
         </Row>
       </div>

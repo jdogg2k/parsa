@@ -28,6 +28,33 @@ class ExcelReader extends Component {
     const files = e.target.files;
     if (files && files[0]) this.setState({ file: files[0] });
   };
+
+  fixCurrency(tData, tColumns) {
+    var sampleRow = tData[0];
+    tColumns.forEach(function(col) {
+      var sVal = sampleRow[col];
+      
+      if (sVal === undefined) { //find valid data if available
+        for (let i = 0; i < tData.length; i++) { //get sample data to show user
+          if (tData[i][col] !== undefined) {
+            sVal = tData[i][col];
+            break;
+          }
+        }
+      }
+
+      if (sVal.toString().startsWith("$")) {
+        tData.forEach(function(row) {
+          var oldVal = row[col];
+          if (oldVal !== undefined)
+            row[col] = Number(oldVal.replace(/[^0-9\.-]+/g,""));
+        });
+      }
+
+    });
+
+    return tData;
+  }
  
   handleFile() {
     this.props.loading(true);
@@ -48,15 +75,31 @@ class ExcelReader extends Component {
       /* get header names */
       const columnsArray = XLSX.utils.sheet_to_json(ws, { header: 1 })[0];
       /* Convert array of arrays */
-      const data = XLSX.utils.sheet_to_json(ws);
+      let xData = XLSX.utils.sheet_to_json(ws);
+
+      const data = this.fixCurrency(xData, columnsArray);
 
       //determine field types 
       columnsArray.forEach(function(col) {
         var x = data[0][col];
         var fType = "string";
+
+        if (x === undefined) { //parse through all rows to find value
+          for (let i = 0; i < data.length; i++) { //get sample data to show user
+            if (data[i][col] !== undefined) {
+              x = data[i][col];
+              break;
+            }
+          }
+        }
+
+        if (col.toLowerCase().indexOf("date") > -1) {
+          fType = "date";
+        }
+
         if (x.toFixed) {
           fType = "number";
-          if (col.indexOf("date") > -1) {
+          if (col.toLowerCase().indexOf("date") > -1) {
             fType = "date";
           }
         }
@@ -72,22 +115,11 @@ class ExcelReader extends Component {
       fieldInfo.productField = undefined;
       fieldInfo.quantityField = undefined;
       fieldInfo.revenueField = undefined;
-      fieldInfo.strings = tFields.filter(function(f){
-        return f.type === "string";
-      });
-      fieldInfo.numbers = tFields.filter(function(f){
-        return f.type === "number";
-      });
-      fieldInfo.dates = tFields.filter(function(f){
-        return f.type === "date";
-      });
-      fieldInfo.sampleStringData = [];
-      for (let i = 0; i < fieldInfo.strings.length; i++) { //get sample data to show user
-        fieldInfo.sampleStringData.push(data[i]);
-      }
-      fieldInfo.sampleNumData = [];
-      for (let i = 0; i < fieldInfo.numbers.length; i++) { //get sample data to show user
-        fieldInfo.sampleNumData.push(data[i]);
+      fieldInfo.fields = tFields;
+
+      fieldInfo.sampleData = [];
+      for (let i = 0; i < fieldInfo.fields.length; i++) { //get sample data to show user
+        fieldInfo.sampleData.push(data[i]);
       }
 
       //fuzzy match for customer name
@@ -97,22 +129,22 @@ class ExcelReader extends Component {
         keys: ['name']
       }
       
-      const fuseCustomer = new Fuse(fieldInfo.strings, options);
+      const fuseCustomer = new Fuse(fieldInfo.fields, options);
       const custResult = fuseCustomer.search('customer');
       if (custResult.length > 0)
         fieldInfo.customerField = custResult[0].item.name;
 
-      const fuseProduct = new Fuse(fieldInfo.strings, options);
+      const fuseProduct = new Fuse(fieldInfo.fields, options);
       const prodResult = fuseProduct.search('product');
       if (prodResult.length > 0)
         fieldInfo.productField = prodResult[0].item.name;
 
-      const fuseQuantity = new Fuse(fieldInfo.numbers, options);
+      const fuseQuantity = new Fuse(fieldInfo.fields, options);
       const quantResult = fuseQuantity.search('quantity');
       if (quantResult.length > 0)
         fieldInfo.quantityField = quantResult[0].item.name;
 
-      const fuseRevenue = new Fuse(fieldInfo.numbers, options);
+      const fuseRevenue = new Fuse(fieldInfo.fields, options);
       const revResult = fuseRevenue.search('revenue|price|sales');
       if (revResult.length > 0)
         fieldInfo.revenueField = revResult[0].item.name;

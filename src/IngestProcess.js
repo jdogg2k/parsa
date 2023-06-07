@@ -72,7 +72,7 @@ class IngestProcess extends Component {
         const checkedMap = new Map([...this.state.selectedNums].filter(([k, v])=>v===true));
         const selectedArray = Array.from(checkedMap.keys());
 
-        this.props.fieldInfo.sampleNumData.forEach(function(numRow){
+        this.props.fieldInfo.sampleData.forEach(function(numRow){
             var calcObj = {};
             calcObj.id = rowCount;
             calcObj.value = null;
@@ -130,7 +130,7 @@ class IngestProcess extends Component {
         const checkedMap = new Map([...this.state.selectedStrings].filter(([k, v])=>v===true));
         const selectedArray = Array.from(checkedMap.keys());
 
-        this.props.fieldInfo.sampleStringData.forEach(function(strRow){
+        this.props.fieldInfo.sampleData.forEach(function(strRow){
             var calcObj = {};
             calcObj.id = rowCount;
             calcObj.value = null;
@@ -241,9 +241,9 @@ render() {
                     <Row style={{marginTop: '15px'}}>
                         <Col sm={4}>
                         <ListGroup style={{textAlign: 'left'}}>
-                            {this.props.fieldInfo.strings != undefined ?
+                            {this.props.fieldInfo.fields != undefined ?
 
-                                this.props.fieldInfo.strings.map(str => {
+                                this.props.fieldInfo.fields.map(str => {
 
                                     return(
                                         <ListGroup.Item key={str.name} action className={str.name === this.state.currentCustTab ? 'active' : ''}  onClick={() => this.setActiveCustomer(str.name)}>
@@ -256,13 +256,13 @@ render() {
                         </Col>
                         <Col sm={8}>
                         <Tab.Content>
-                            {this.props.fieldInfo.strings != undefined ?
-                                this.props.fieldInfo.strings.map(str => {
+                            {this.props.fieldInfo.fields != undefined ?
+                                this.props.fieldInfo.fields.map(str => {
                                     return(
                                         <Tab.Pane key={'pane' + str.name} eventKey={str.name}>
                                             <ListGroup>
-                                                {this.props.fieldInfo.sampleStringData != undefined ?
-                                                    this.props.fieldInfo.sampleStringData.map(data => {
+                                                {this.props.fieldInfo.sampleData != undefined ?
+                                                    this.props.fieldInfo.sampleData.map(data => {
                                                         return(
                                                             <ListGroup.Item key={data.__rowNum__} variant="info">{data[str.name]}</ListGroup.Item>
                                                         )
@@ -295,9 +295,9 @@ render() {
                     <Row style={{marginTop: '15px'}}>
                         <Col sm={4}>
                         <ListGroup style={{textAlign: 'left'}}>
-                            {this.props.fieldInfo.strings != undefined ?
+                            {this.props.fieldInfo.fields != undefined ?
 
-                                this.props.fieldInfo.strings.map(str => {
+                                this.props.fieldInfo.fields.map(str => {
 
                                     return(
                                         <ListGroup.Item key={str.name} action className={str.name === this.state.currentProductTab ? 'active' : ''}  onClick={() => this.setActiveProduct(str.name)}>
@@ -310,13 +310,13 @@ render() {
                         </Col>
                         <Col sm={8}>
                         <Tab.Content>
-                            {this.props.fieldInfo.strings != undefined ?
-                                this.props.fieldInfo.strings.map(str => {
+                            {this.props.fieldInfo.fields != undefined ?
+                                this.props.fieldInfo.fields.map(str => {
                                     return(
                                         <Tab.Pane key={'pane' + str.name} eventKey={str.name}>
                                             <ListGroup>
-                                                {this.props.fieldInfo.sampleStringData != undefined ?
-                                                    this.props.fieldInfo.sampleStringData.map(data => {
+                                                {this.props.fieldInfo.sampleData != undefined ?
+                                                    this.props.fieldInfo.sampleData.map(data => {
                                                         return(
                                                             <ListGroup.Item key={data.__rowNum__} variant="info">{data[str.name]}</ListGroup.Item>
                                                         )
@@ -351,9 +351,9 @@ render() {
                     <Row style={{marginTop: '15px'}}>
                         <Col sm={2}>
                         <ListGroup>
-                        {this.props.fieldInfo.strings != undefined ?
+                        {this.props.fieldInfo.fields != undefined ?
 
-                        this.props.fieldInfo.strings.map(item => {
+                        this.props.fieldInfo.fields.map(item => {
 
                             return(
                                     <label key={item.name} className="multiCheckLabel">
@@ -394,9 +394,9 @@ render() {
                     <Row style={{marginTop: '15px'}}>
                         <Col sm={4}>
                         <ListGroup style={{textAlign: 'left'}}>
-                            {this.props.fieldInfo.numbers != undefined ?
+                            {this.props.fieldInfo.fields != undefined ?
 
-                                this.props.fieldInfo.numbers.map(str => {
+                                this.props.fieldInfo.fields.map(str => {
 
                                     return(
                                         <ListGroup.Item key={str.name} action className={str.name === this.state.currentQuantTab ? 'active' : ''}  onClick={() => this.setActiveQuantity(str.name)}>
@@ -409,13 +409,13 @@ render() {
                         </Col>
                         <Col sm={8}>
                         <Tab.Content>
-                            {this.props.fieldInfo.numbers != undefined ?
-                                this.props.fieldInfo.numbers.map(str => {
+                            {this.props.fieldInfo.fields != undefined ?
+                                this.props.fieldInfo.fields.map(str => {
                                     return(
                                         <Tab.Pane key={'pane' + str.name} eventKey={str.name}>
                                             <ListGroup>
-                                                {this.props.fieldInfo.sampleNumData != undefined ?
-                                                    this.props.fieldInfo.sampleNumData.map(data => {
+                                                {this.props.fieldInfo.sampleData != undefined ?
+                                                    this.props.fieldInfo.sampleData.map(data => {
                                                         return(
                                                             <ListGroup.Item key={data.__rowNum__} variant="info">{data[str.name]}</ListGroup.Item>
                                                         )
@@ -448,9 +448,9 @@ render() {
                     <Row style={{marginTop: '15px'}}>
                         <Col sm={4}>
                         <ListGroup style={{textAlign: 'left'}}>
-                            {this.props.fieldInfo.numbers != undefined ?
+                            {this.props.fieldInfo.fields != undefined ?
 
-                                this.props.fieldInfo.numbers.map(num => {
+                                this.props.fieldInfo.fields.map(num => {
 
                                     return(
                                         <ListGroup.Item key={num.name} action className={num.name === this.state.currentRevTab ? 'active' : ''}  onClick={() => this.setActiveRevenue(num.name)}>
@@ -463,13 +463,13 @@ render() {
                         </Col>
                         <Col sm={8}>
                         <Tab.Content>
-                            {this.props.fieldInfo.numbers != undefined ?
-                                this.props.fieldInfo.numbers.map(num => {
+                            {this.props.fieldInfo.fields != undefined ?
+                                this.props.fieldInfo.fields.map(num => {
                                     return(
                                         <Tab.Pane key={'pane' + num.name} eventKey={num.name}>
                                             <ListGroup>
-                                                {this.props.fieldInfo.sampleNumData != undefined ?
-                                                    this.props.fieldInfo.sampleNumData.map(data => {
+                                                {this.props.fieldInfo.sampleData != undefined ?
+                                                    this.props.fieldInfo.sampleData.map(data => {
                                                         return(
                                                             <ListGroup.Item key={data.__rowNum__} variant="info">{data[num.name]}</ListGroup.Item>
                                                         )
@@ -503,9 +503,9 @@ render() {
                     <Row style={{marginTop: '15px'}}>
                         <Col sm={2}>
                         <ListGroup>
-                        {this.props.fieldInfo.numbers != undefined ?
+                        {this.props.fieldInfo.fields != undefined ?
 
-                        this.props.fieldInfo.numbers.map(item => {
+                        this.props.fieldInfo.fields.map(item => {
 
                             return(
                                     <label key={item.name} className="multiCheckLabel">
