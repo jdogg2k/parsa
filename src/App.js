@@ -94,7 +94,7 @@ const App = ({ signOut, user }) => {
                 retStr += 'N/A</b>';
               } else {
                 var uP = Highcharts.numberFormat(this.point.rawdata.upliftPotential,2);
-                //check for limit change
+                //check for limit changes
                 if (upliftLimit > 0) {
                   uP = Highcharts.numberFormat(parseFloat((upliftLimit / 100).toFixed(2)) * this.point.x,2);
                 }
