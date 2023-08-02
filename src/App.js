@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import CustomerGroupModel from './modals/CustomerGroupModal'
 import CustomerGroupList from "./CustomerGroupList";
+import Payment from "./Payment";
 import ParsaNav from './ParsaNav'
 import Toaster from './Toaster'
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -1139,17 +1140,25 @@ const scatOptions = {
 
           groupedData.push(tRow);
         } else {
-          tRow[productHeader] += " " + rowObj[productHeader];
-          tRow["Distribution Type"] += " " + rowObj["Distribution Type"];
+          if (tRow[productHeader].indexOf(rowObj[productHeader]) == -1)
+            tRow[productHeader] += " " + rowObj[productHeader];
+
+          if (tRow["Distribution Type"].indexOf(rowObj["Distribution Type"]) == -1)
+            tRow["Distribution Type"] += " " + rowObj["Distribution Type"];
+
+          if (tRow["Services Purchased"].indexOf(rowObj["Services Purchased"]) == -1)
+            tRow["Services Purchased"] += " " + rowObj["Services Purchased"];
+
           tRow["Cost of Goods Sold"] += rowObj["Cost of Goods Sold"];
           tRow["Unit Revenue ($)"] += rowObj["Unit Revenue ($)"];
           tRow["Quantity"] += rowObj["Quantity"];
-          tRow["Services Purchased"] += " " + rowObj["Services Purchased"];
           tRow["Service Revenue"] += rowObj["Service Revenue"];
           tRow["Cost of Services"] += rowObj["Cost of Services"];
         }
         
       });
+
+      console.log(JSON.stringify(groupedData));
 
       getDataClusters(groupedData);
 
@@ -1331,6 +1340,11 @@ const scatOptions = {
             onSelectionChanged={onCustomerSelectionChanged}
             />
       </div> : null }</Col>
+        </Row>
+      </Container>
+      <Container className={appMode === 'payment' ? '' : 'd-none'}>
+        <Row style={{marginTop: "10px"}}>
+          <Col><Payment /></Col>
         </Row>
       </Container>
       <Container className={appMode === 'groups' ? '' : 'd-none'}>

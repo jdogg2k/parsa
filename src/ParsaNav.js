@@ -11,6 +11,10 @@ export default class ParsaNav extends React.Component {
     this.props.modeChange("dataload");            
   }
 
+  goToPayment = () => {
+    this.props.modeChange("payment");            
+  }
+
 render() {
   return (
     <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
@@ -22,6 +26,7 @@ render() {
           <Nav className="me-auto" defaultActiveKey="load">
             <Nav.Link eventKey="load" onClick={this.goToDataLoads}>Load Data</Nav.Link>
             <Nav.Link eventKey="segments" onClick={this.goToGroups}>My Customer Groups</Nav.Link>
+            <Nav.Link eventKey="payment" onClick={this.goToPayment}>Payment</Nav.Link>
             <NavDropdown title="Dropdown" id="collasible-nav-dropdown">
               <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
               <NavDropdown.Item href="#action/3.2">
