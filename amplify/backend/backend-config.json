@@ -21,6 +21,39 @@
       "providerPlugin": "awscloudformation",
       "service": "AppSync"
     },
+    "parsadocker": {
+      "apiType": "REST",
+      "build": true,
+      "categoryPolicies": [],
+      "dependsOn": [
+        {
+          "attributes": [
+            "ClusterName",
+            "VpcId",
+            "VpcCidrBlock",
+            "SubnetIds",
+            "VpcLinkId",
+            "CloudMapNamespaceId"
+          ],
+          "category": "",
+          "resourceName": "NetworkStack"
+        }
+      ],
+      "deploymentMechanism": "FULLY_MANAGED",
+      "environmentMap": {},
+      "iamAccessUnavailable": true,
+      "imageSource": {
+        "type": "CUSTOM"
+      },
+      "mutableParametersState": {
+        "permissions": {}
+      },
+      "providerPlugin": "awscloudformation",
+      "resourceName": "parsadocker",
+      "restrictAccess": false,
+      "service": "ElasticContainer",
+      "skipHashing": false
+    },
     "pythonParsingApi": {
       "dependsOn": [
         {

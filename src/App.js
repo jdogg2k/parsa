@@ -350,7 +350,10 @@ const scatOptions = {
 
     console.log("LOADING PYTHON");
 
+    console.log(myPayload);
+
     let data = await API.post('pythonParsingApi', '/items', myPayload);
+    //let data = await API.post('parsadocker', '/items', myPayload); DOCKER method, not working with API push
 
     var fullPlot = [];
 
